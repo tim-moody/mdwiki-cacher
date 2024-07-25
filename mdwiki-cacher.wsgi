@@ -268,7 +268,7 @@ def get_redir_path_direct(path):
         print('In get_mdwiki_api_url', path)
     # ADD RETRY
     url = CONST.mdwiki_domain + path
-    logging.info("Downloading from URL: %s\n", str(url))
+    print("Downloading from URL: " + str(url))
     # mdwiki_session = CachedSession(mdwiki_api_db, backend='sqlite')
     resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
     return breakout_resp(resp)
