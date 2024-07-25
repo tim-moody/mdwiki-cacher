@@ -268,9 +268,10 @@ def get_redir_path_direct(path):
         print('In get_mdwiki_api_url', path)
     # ADD RETRY
     url = CONST.mdwiki_domain + path
-    #logging.info("Downloading from URL: %s\n", str(url))
+    logging.info("Downloading from URL: %s\n", str(url))
     # mdwiki_session = CachedSession(mdwiki_api_db, backend='sqlite')
     resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
+    return breakout_resp(resp)
     # return 404 if 500 error
     if resp.status_code == 500:
         return respond_404('500 Error', path)
