@@ -111,7 +111,8 @@ def do_GET(path):
     if path.startswith('/w/api.php?'):
         if '&titles=' in path: # is a redirect or a page request
             if '&prop=redirects' in path:
-                return get_redir_path(path)
+                # return get_redir_path(path)
+                return get_redir_path_direct(path)
             else:
                 # this is not expected for zims
                 # but can happen when mirroring site
@@ -262,6 +263,26 @@ def get_enwp_other_url(path):
     # REWRITE  wfile.write(resp.content)
     return breakout_resp(resp)
 
+def get_redir_path_direct(path):
+    if VERBOSE:
+        print('In get_mdwiki_api_url', path)
+    # ADD RETRY
+    url = CONST.mdwiki_domain + path
+    #logging.info("Downloading from URL: %s\n", str(url))
+    # mdwiki_session = CachedSession(mdwiki_api_db, backend='sqlite')
+    resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
+    # return 404 if 500 error
+    if resp.status_code == 500:
+        return respond_404('500 Error', path)
+
+    # if resp.status_code == 503 or resp.content.startswith(b'{"error":'):
+    if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
+        # resp = retry_url(url) only retry in load cache
+        return respond_404('Not 200 or Error', path)
+    # start_response(resp)
+    # REWRITE  wfile.write(resp.content)
+    return breakout_resp(resp)
+
 def get_redir_path(path): # top level
     # path queried for redirects can have multiple titles
     # break them out because some could be mdwiki and some enwp
@@ -270,6 +291,12 @@ def get_redir_path(path): # top level
     # skip enwp page redirect if is name of mdwiki page or redirect
     args = parse_qs(urlparse(path).query)
     titles = args['titles'][0].split('|')
+    # formatversion = args.get('formatversion')
+    if args.get('formatversion') == ['2']:
+        is_fmt2 = True
+    else:
+        is_fmt2 = False
+
     base_query = path.split('&titles=')[0] + '&titles='
     more_rd_query = '/w/api.php?action=query&format=json&prop=redirects&rdlimit=max&rdnamespace=0&redirects=true&titles='
     # enwp_session = CachedSession(enwp_db, backend='sqlite')
@@ -289,15 +316,20 @@ def get_redir_path(path): # top level
             title_page_ids[title]['mdwiki_pageid'] = mdwiki_pageid
 
             ########### following line fails in mwoffliner-dev, but not in latest ############
+            # in dev with format 2, pages response is list of page structures
+            # in 13.1.0 it is dict of page structures keyed by pageid
 
-            page_resp = batch_resp['query']['pages'][mdwiki_pageid]
+            if is_fmt2:
+                page_resp = batch_resp['query']['pages'][0]
+            else:
+                page_resp = batch_resp['query']['pages'][mdwiki_pageid]
 
             #pages_resp[title] = {}
             #pages_resp[title][mdwiki_pageid] = page_resp
-            pages_resp[mdwiki_pageid] = page_resp
+            # pages_resp[mdwiki_pageid] = page_resp
 
             redirects = get_mdwiki_redirects(title) # all redirects for this title known to mdwiki
-            pages_resp[mdwiki_pageid]['redirects'] = redirects
+            page_resp['redirects'] = redirects
 
             # get any redirects from EN WP
             # do not include if is name of page or redirect on mdwiki
