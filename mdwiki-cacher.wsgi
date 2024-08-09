@@ -265,10 +265,10 @@ def get_enwp_other_url(path):
 
 def get_redir_path_direct(path):
     if VERBOSE:
-        print('In get_mdwiki_api_url', path)
+        print('In get_redir_path_direct', path)
     # ADD RETRY
     url = CONST.mdwiki_domain + path
-    print("Downloading from URL: " + str(url))
+    print("Downloading from URL: " + url)
     # mdwiki_session = CachedSession(mdwiki_api_db, backend='sqlite')
     resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
     return breakout_resp(resp)
