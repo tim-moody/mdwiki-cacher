@@ -1,8 +1,10 @@
 #!/usr/bin/python3
 # su - www-data -s /bin/bash -c '/srv/mdwiki-cacher/load-mdwiki-cache.py' for testing
-# su - www-data -s /bin/bash -c 'python3 -i /srv/mdwiki-cacher/load-mdwiki-cache.py -i'
+# su - www-data -s /bin/bash -c 'python3 -i /srv/mdwiki-cacher-dev/load-mdwiki-cache.py -i'
 import os
-MDWIKI_CACHER_DIR = '/srv/mdwiki-cacher/'
+#MDWIKI_CACHER_DIR = '/srv/mdwiki-cacher/'
+MDWIKI_CACHER_DIR = '/srv/mdwiki-cacher-dev/'
+
 os.chdir(MDWIKI_CACHER_DIR)
 import logging, logging.handlers
 import sys
@@ -39,6 +41,7 @@ mdwiki_api_session = CachedSession(CONST.mdwiki_api_cache, backend='filesystem')
 
 parse_page = CONST.mdwiki_domain + CONST.parse_page
 videdit_page = CONST.mdwiki_domain + CONST.videdit_page
+rest_page = CONST.mdwiki_domain + CONST.rest_page
 
 # session = CachedSession(cache_control=True)
 # https://requests-cache.readthedocs.io/en/stable/user_guide/headers.html
@@ -125,12 +128,15 @@ def refresh_cache_page(page):
     refresh_cache_url(url)
     url2 = videdit_page + page
     refresh_cache_url(url2)
+    url3 = rest_page + page.replace('/', '%2F').replace(':', '%3A').replace("'", '%27').replace("+", '%2B') + '/html'
+    refresh_cache_url(url3)
 
 def refresh_cache_url(url):
     global failed_url_list
     get_except = False
     try:
-        r = uncached_session.get(url, headers=CONST.cacher_headers)
+        # r = uncached_session.get(url, headers=CONST.cacher_headers)
+        r = requests.get(url, headers=CONST.cacher_headers)
     except:
         get_except = True
 
