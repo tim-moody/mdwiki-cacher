@@ -111,7 +111,8 @@ def do_GET(path):
     if path.startswith('/w/api.php?'):
         if '&titles=' in path: # is a redirect or a page request
             if '&prop=redirects' in path:
-                return get_redir_path(path)
+                # return get_redir_path(path)
+                return get_mdwiki_api_url(path)
             else:
                 # this is not expected for zims
                 # but can happen when mirroring site
