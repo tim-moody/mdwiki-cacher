@@ -82,7 +82,7 @@ def application(environ, start_response):
         if req_uri == mdwiki_intro_page: # reset count on start of run
             skipped_page_count = 0
         if req_uri in mdwiki_urls: # some hardcoded urls that must go to mdwiki
-            status, response_headers, response_body = get_mdwiki_other_url(req_uri)
+            status, response_headers, response_body = get_mdwiki_url_direct(req_uri)
 
         elif req_uri.startswith(nonwiki_url):
             status, response_headers, response_body = do_nonwiki(req_uri, environ)
@@ -232,6 +232,22 @@ def get_mdwiki_other_url(path):
     #logging.info("Downloading from URL: %s\n", str(url))
     # mdwiki_session = CachedSession(mdwiki_other_db, backend='sqlite', expire_after=expiry_days)
     resp = mdwiki_other_session.get(url, headers=CONST.cacher_headers)
+    # if resp.status_code == 503 or resp.content.startswith(b'{"error":'):
+    if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
+        # resp = retry_url(url) only retry in load cache
+        return respond_404('Not 200 or Error', path)
+    # start_response(resp)
+    # REWRITE  wfile.write(resp.content)
+    return breakout_resp(resp)
+
+def get_mdwiki_url_direct(path):
+    if VERBOSE:
+        print('In get_mdwiki_other_url', path)
+    # ADD RETRY
+    url = CONST.mdwiki_domain + path
+    #logging.info("Downloading from URL: %s\n", str(url))
+    # mdwiki_session = CachedSession(mdwiki_other_db, backend='sqlite', expire_after=expiry_days)
+    resp = requests.get(url, headers=CONST.cacher_headers)
     # if resp.status_code == 503 or resp.content.startswith(b'{"error":'):
     if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
         # resp = retry_url(url) only retry in load cache
