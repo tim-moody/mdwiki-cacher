@@ -45,12 +45,20 @@ skipped_page_count = 0
 
 # /robots.txt handled by nginx
 
+###################
+# is it /api/rest_v1 or /w/rest.php/v1
+# it is /w/rest.php/v1
+# requires mwoffliner:dev and --forceRender="RestApi"
+####################
 # these are probing queris at the start of a run
+# for now we will leave the rest_v1 versions in case they are probed
+
 mdwiki_urls = ['/',
                 '/wiki/',
                 mdwiki_intro_page,
                 '/api/rest_v1/page/mobile-sections/Main_Page',
                 '/api/rest_v1/page/html/Main_Page',
+                '/w/rest.php/v1/page/Main_Page',
                 '/w/api.php?action=visualeditor&mobileformat=html&format=json&paction=parse&page=Main_Page',
                 '/w/api.php?',
                 '/w/api.php?action=query&format=json&prop=redirects%7Crevisions%7Ccoordinates&rdlimit=max&rdnamespace=',
@@ -104,11 +112,14 @@ def do_GET(path):
     # args = parse_qs(urlparse(path).query) FUTURE
 
     # N.B. the param for getting pages is &page= not &title=
-    # current code will just get all enwp from mdwiki
+    # current code will just get all enwp from mdwiki - ##### FIX THIS
 
     # TO DO: INTEGRATE THE OTHER APIS
 
-    if path.startswith('/w/api.php?'):
+    if path.startswith('/w/rest.api/v1/'):
+        return get_rest_api(path)
+
+    elif path.startswith('/w/api.php?'):
         if '&titles=' in path: # is a redirect or a page request
             if '&prop=redirects' in path:
                 # return get_redir_path(path)
@@ -160,6 +171,24 @@ def dump(environ):
     response_body = ['%s: %s' % (key, value) for key, value in sorted(environ.items())]
     response_body = '\n'.join(response_body)
     return response_body
+
+def get_rest_api(path):
+    if VERBOSE:
+        print('In get_rest_api', path)
+    # ADD RETRY
+    url = CONST.mdwiki_domain + path
+    resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
+    # return 404 if 500 error
+    if resp.status_code == 500:
+        return respond_rest_404('500 Error', path)
+
+    # if resp.status_code == 503 or resp.content.startswith(b'{"error":'):
+    if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
+        # resp = retry_url(url) only retry in load cache
+        return respond_rest_404('Not 200 or Error', path)
+    # start_response(resp)
+    # REWRITE  wfile.write(resp.content)
+    return breakout_resp(resp)
 
 def get_mdwiki_api_url(path):
     if VERBOSE:
@@ -390,6 +419,20 @@ def respond_404(reason, path):
     headers = [('Content-type', 'text/html; charset=UTF-8')]
     status_code = '404'
     body = b'Unknown Page'
+    return status_code, headers, body
+
+def respond_rest_404(reason, path):
+    print("Skipping " + reason + " Page: " + str(path))
+    # REWRITE  send_response(404)
+    # REWRITE  send_header('Content-type', 'text/html')
+    # REWRITE  end_headers()
+    # REWRITE  wfile.write(b'Unknown Page')
+    headers = [('Content-type', 'application/json')]
+    status_code = '404'
+    bpath = str.encode(path)
+    body = b'{"errorKey":"rest-nonexistent-title",'
+    body += b'"messageTranslations":{"en":"The specified page (' + bpath
+    body += b') does not exist"},"httpCode":404,"httpReason":"Not Found"}'
     return status_code, headers, body
 
 def start_response( resp):
