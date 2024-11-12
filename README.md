@@ -1,5 +1,9 @@
 # mdwiki-cacher
 
+## Changes in November, 2024
+- We will use the /w/rest.php/v1/page API endpoint
+- This requires mwoffliner:dev and --forceRender="RestApi"
+
 ## Installs
 - run setup
 - edit /etc/crontab (see below)

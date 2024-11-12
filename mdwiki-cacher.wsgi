@@ -117,7 +117,10 @@ def do_GET(path):
     # TO DO: INTEGRATE THE OTHER APIS
 
     if path.startswith('/w/rest.api/v1/'):
-        return get_rest_api(path)
+        if path.startswith('/w/rest.api/v1/page'):
+            return get_rest_api_page(path)
+        else:
+            return get_rest_api(path)
 
     elif path.startswith('/w/api.php?'):
         if '&titles=' in path: # is a redirect or a page request
@@ -171,6 +174,25 @@ def dump(environ):
     response_body = ['%s: %s' % (key, value) for key, value in sorted(environ.items())]
     response_body = '\n'.join(response_body)
     return response_body
+
+def get_rest_api_page(path):
+    if VERBOSE:
+        print('In get_rest_api_page', path)
+    page = path.split('/w/rest.php/v1/page/')[1]
+    page = page.split('/')[0]
+    if page in mdwiki_list:
+        url = CONST.mdwiki_domain + path
+        resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
+    elif page in enwp_list:
+        url = CONST.enwp_domain + path
+        resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
+    else:
+        return respond_rest_404('Unknown page', path)
+    if resp.status_code == 500:
+        return respond_rest_404('500 Error', path)
+    if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
+        return respond_rest_404('Not 200 or Error', path)
+    return breakout_resp(resp)
 
 def get_rest_api(path):
     if VERBOSE:
@@ -550,7 +572,6 @@ def get_enwp_page_list():
 
 def get_mdwiki_page_list():
     global mdwiki_list
-
     try:
         with open('data/mdwiki.tsv') as f:
             txt = f.read()
@@ -567,11 +588,9 @@ def get_mdwiki_redirect_lists():
     #   rd_to_namespace
     #   rd_to_title_hex
     #   rd_from_name_hex
-
     global mdwiki_redirects
     global mdwiki_redirect_list
     global mdwiki_rd_lookup
-
     mdwiki_redirects = read_json_file('data/mdwiki_redirects.json')
     mdwiki_redirect_list = mdwiki_redirects['list']
     mdwiki_rd_lookup = mdwiki_redirects['lookup']
