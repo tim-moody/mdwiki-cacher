@@ -73,7 +73,7 @@ mdwiki_urls = ['/',
 
 def application(environ, start_response):
     if environ['HTTP_USER_AGENT'] != 'MWOffliner/HEAD (info@iiab.me)':
-        return respond_404('Unknown', path)
+        return respond_404('Unknown', '/')
 
     req_method = environ['REQUEST_METHOD']
     # req_uri = environ['REQUEST_URI'].split('?')[0] # remove any cache buster
