@@ -126,7 +126,8 @@ def do_GET(path):
         if '&titles=' in path: # is a redirect or a page request
             if '&prop=redirects' in path:
                 # return get_redir_path(path)
-                return get_mdwiki_api_url(path)
+                # return get_mdwiki_api_url(path)
+                return get_redirects_from_mdwiki(path)
             else:
                 # this is not expected for zims
                 # but can happen when mirroring site
@@ -333,6 +334,22 @@ def get_enwp_other_url(path):
     return breakout_resp(resp)
 
 # N.B. as of Nov, 2024 we let mdwiki handle multi source redirects
+def get_redirects_from_mdwiki(path):
+    if VERBOSE:
+        print('In get_redirects_from_mdwiki', path)
+    # ADD RETRY
+    url = CONST.mdwiki_domain + path
+    resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
+    # if resp.status_code == 500:
+    #    return respond_404('500 Error', path)
+
+    # if resp.status_code == 503 or resp.content.startswith(b'{"error":'):
+    #if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
+        # resp = retry_url(url) only retry in load cache
+    #    return respond_404('Not 200 or Error', path)
+    # start_response(resp)
+    # REWRITE  wfile.write(resp.content)
+    return breakout_resp(resp)
 
 def get_redir_path(path): # top level
     # path queried for redirects can have multiple titles
