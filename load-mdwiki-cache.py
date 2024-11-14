@@ -42,6 +42,7 @@ mdwiki_api_session = CachedSession(CONST.mdwiki_api_cache, backend='filesystem')
 parse_page = CONST.mdwiki_domain + CONST.parse_page
 videdit_page = CONST.mdwiki_domain + CONST.videdit_page
 rest_page = CONST.mdwiki_domain + CONST.rest_page
+wiki_page = CONST.mdwiki_domain + CONST.wiki_page
 
 # session = CachedSession(cache_control=True)
 # https://requests-cache.readthedocs.io/en/stable/user_guide/headers.html
@@ -126,10 +127,13 @@ def rebuild_cache(mdwiki_list): # run interactively
 def refresh_cache_page(page):
     url = parse_page + page.replace('_', '%20').replace('/', '%2F').replace(':', '%3A').replace("'", '%27').replace("+", '%2B')
     refresh_cache_url(url)
-    url2 = videdit_page + page
-    refresh_cache_url(url2)
+    # url2 = videdit_page + page
+    # refresh_cache_url(url2) # no longer used (Nov, 2024)
     url3 = rest_page + page.replace('/', '%2F').replace(':', '%3A').replace("'", '%27').replace("+", '%2B') + '/html'
     refresh_cache_url(url3)
+    # do we need with_html for Ibrahem
+    url4 = wiki_page + page.replace('/', '%2F').replace(':', '%3A').replace("'", '%27').replace("+", '%2B')
+    refresh_cache_url(url4)
 
 def refresh_cache_url(url):
     global failed_url_list

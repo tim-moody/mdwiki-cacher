@@ -28,3 +28,4 @@ cacher_headers =  {'User-Agent': user_agent}
 parse_page = '/w/api.php?action=parse&format=json&prop=modules%7Cjsconfigvars%7Cheadhtml&page='
 videdit_page = '/w/api.php?action=visualeditor&mobileformat=html&format=json&paction=parse&page='
 rest_page = '/w/rest.php/v1/page/'
+wiki_page = '/wiki/'

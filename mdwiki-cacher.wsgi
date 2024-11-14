@@ -185,9 +185,11 @@ def get_rest_api_page(path):
         resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
     elif page in enwp_list:
         url = CONST.enwp_domain + path
-        resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
+        resp = enwp_api_session.get(url, headers=CONST.cacher_headers)
     else:
-        return respond_rest_404('Unknown page', path)
+        return respond_rest_404('Unknown Page', path)
+    if resp.status_code == 404:
+        return respond_rest_404('Unknown Page', path)
     if resp.status_code == 500:
         return respond_rest_404('500 Error', path)
     if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
@@ -329,6 +331,8 @@ def get_enwp_other_url(path):
 
     # REWRITE  wfile.write(resp.content)
     return breakout_resp(resp)
+
+# N.B. as of Nov, 2024 we let mdwiki handle multi source redirects
 
 def get_redir_path(path): # top level
     # path queried for redirects can have multiple titles
