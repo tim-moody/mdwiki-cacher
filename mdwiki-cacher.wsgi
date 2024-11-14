@@ -72,6 +72,7 @@ mdwiki_urls = ['/',
 #mdwiki_session = CachedSession(mdwiki_db, backend='sqlite')
 
 def application(environ, start_response):
+    print(environ['HTTP_USER_AGENT'])
     if environ['HTTP_USER_AGENT'] != 'MWOffliner/HEAD (info@iiab.me)':
         return respond_404('Unknown', '/')
 
