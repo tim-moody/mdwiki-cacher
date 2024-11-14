@@ -72,6 +72,9 @@ mdwiki_urls = ['/',
 #mdwiki_session = CachedSession(mdwiki_db, backend='sqlite')
 
 def application(environ, start_response):
+    if environ['HTTP_USER_AGENT'] != 'MWOffliner/HEAD (info@iiab.me)':
+        return respond_404('Unknown', path)
+
     req_method = environ['REQUEST_METHOD']
     # req_uri = environ['REQUEST_URI'].split('?')[0] # remove any cache buster
     req_uri = environ['REQUEST_URI']
