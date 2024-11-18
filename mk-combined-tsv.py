@@ -195,7 +195,7 @@ def get_mdwiki_redirect_lists():
 
     global mdwiki_redirects_raw
     global mdwiki_redirect_list
-    global mdwiki_rd_lookup
+    global mdwiki_rd_lookup # dict of pages with array of redirects
 
     mdwiki_redirects_raw = {}
     mdwiki_redirect_list = []

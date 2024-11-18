@@ -68,13 +68,20 @@ mdwiki_urls = ['/',
                 '/logo.svg',
                 '/favicon.ico']
 
+accepted_user_agents = ['axios/1.6.8',
+                        'MWOffliner/HEAD',
+                        'MWOffliner/HEAD (info@iiab.me)',
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36']
+
 #enwp_session = CachedSession(enwp_db, backend='sqlite')
 #mdwiki_session = CachedSession(mdwiki_db, backend='sqlite')
 
 def application(environ, start_response):
-    print(environ['HTTP_USER_AGENT'])
-    if environ['HTTP_USER_AGENT'] != 'MWOffliner/HEAD (info@iiab.me)':
-        return respond_404('Unknown', '/')
+    # print(environ['HTTP_USER_AGENT'])
+    # there are too manu user agents and they are likely to change
+    #if environ['HTTP_USER_AGENT'] not in accepted_user_agents:
+    #    start_response('401', [('Content-type', 'text/plain')])
+    #    return('not permitted')
 
     req_method = environ['REQUEST_METHOD']
     # req_uri = environ['REQUEST_URI'].split('?')[0] # remove any cache buster
@@ -131,7 +138,8 @@ def do_GET(path):
             if '&prop=redirects' in path:
                 # return get_redir_path(path)
                 # return get_mdwiki_api_url(path)
-                return get_redirects_from_mdwiki(path)
+                # return get_redirects_from_mdwiki(path)
+                return get_redir_path_v2(path)
             else:
                 # this is not expected for zims
                 # but can happen when mirroring site
@@ -338,7 +346,7 @@ def get_enwp_other_url(path):
     return breakout_resp(resp)
 
 # N.B. as of Nov, 2024 we let mdwiki handle multi source redirects
-def get_redirects_from_mdwiki(path):
+def get_redirects_from_mdwiki(path): # don't use, too slow
     if VERBOSE:
         print('In get_redirects_from_mdwiki', path)
     # ADD RETRY
@@ -355,7 +363,81 @@ def get_redirects_from_mdwiki(path):
     # REWRITE  wfile.write(resp.content)
     return breakout_resp(resp)
 
-def get_redir_path(path): # top level
+def get_redir_path_v2(path): # top level
+    # simplify
+    # redirects only reported for each source
+    # enwp redirects to mdwiki page ignored
+
+    args = parse_qs(urlparse(path).query)
+    titles = args['titles'][0].split('|')
+    base_query = path.split('&titles=')[0] + '&titles='
+    more_rd_query = '/w/api.php?action=query&format=json&prop=redirects&rdlimit=max&rdnamespace=0&redirects=true&titles='
+
+    pages_resp = {}
+    title_page_ids = {}
+    mdiwki_article_list = []
+    enwp_article_list = []
+    for title in titles: # split out titles for subsequent processing
+        if title in mdwiki_list:
+            mdiwki_article_list.append(title)
+        elif title in enwp_list:
+            enwp_article_list.append(title)
+    # get enwp article redirects if any
+    query = calc_redir_query(enwp_article_list)
+    if query:
+        resp = requests.get(CONST.enwp_domain + query, headers=CONST.cacher_headers)
+        batch_resp = json.loads(resp.content)
+    else:
+        batch_resp = calc_empty_batch_resp()
+
+    for title in mdiwki_article_list:
+        # we are missing to id
+        query = CONST.rest_page + title + '/bare'
+        resp = requests.get(CONST.mdwiki_domain + query, headers=CONST.cacher_headers)
+        page_meta = json.loads(resp.content)
+        redirects = get_mdwiki_redirects(title) # all redirects for this title known to mdwiki
+        page_ns = redirects[0]['ns']
+        page_dict = {"pageid":page_meta['id'],"ns": page_ns, "title":"Gout", "redirects": redirects}
+
+        batch_resp['query']['pages'].append(page_dict)
+
+    return respond_json(batch_resp)
+
+def calc_redir_query(article_list):
+    more_rd_query = '/w/api.php?action=query&format=json&prop=redirects&rdlimit=max&rdnamespace=0&redirects=true&titles='
+    if len(article_list) > 0:
+        query = more_rd_query + article_list[0]
+        for article in article_list:
+            query += '%7C' + article
+    else:
+        query = None
+    return query
+
+def calc_empty_batch_resp():
+    #batch_str = '{"batchcomplete":true,"warnings":{"main":{"warnings":"Unrecognized parameter: colimit."},'
+    #batch_str += '"query":{"warnings":"Unrecognized value for parameter \"prop\": coordinates"}},"query":{"pages":[]'
+    #batch_str += ']},"limits":{"redirects":500}}'
+    #batch_resp = json.loads(batch_str)
+    batch_resp = {
+                    "batchcomplete": True,
+                    "warnings": {
+                        "main": {
+                            "warnings": "Unrecognized parameter: colimit."
+                        },
+                        "query": {
+                            "warnings": "Unrecognized value for parameter \"prop\": coordinates"
+                        }
+                    },
+                    "query": {
+                        "pages": []
+                    },
+                    "limits": {
+                        "redirects": 500
+                    }
+                }
+    return batch_resp
+
+def get_redir_path(path): # top level - original
     # path queried for redirects can have multiple titles
     # break them out because some could be mdwiki and some enwp
     # the query also requests other properties than redirect
