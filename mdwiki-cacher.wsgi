@@ -397,8 +397,8 @@ def get_redir_path_v2(path): # top level
         # page_meta = json.loads(resp.content)
         redirects = get_mdwiki_redirects(title) # all redirects for this title known to mdwiki
         # page_ns = redirects[0]['ns']
-        page_dict = {"pageid":mdwiki_list['title']['id'],
-                    "ns":mdwiki_list['title']['ns'],
+        page_dict = {"pageid":mdwiki_list[title]['pageid'],
+                    "ns":mdwiki_list[title]['ns'],
                     "title":title,
                     "redirects":redirects}
 
@@ -410,7 +410,7 @@ def calc_redir_query(article_list):
     more_rd_query = '/w/api.php?action=query&format=json&prop=redirects&rdlimit=max&rdnamespace=0&redirects=true&titles='
     if len(article_list) > 0:
         query = more_rd_query + article_list[0]
-        for article in article_list:
+        for article in article_list[1:]:
             query += '%7C' + article
     else:
         query = None
