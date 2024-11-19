@@ -27,7 +27,7 @@ import constants as CONST
 # HOME_PAGE = 'App/IntroPage'
 RETRY_SECONDS = 20
 RETRY_LOOP = 10
-mdwiki_list = []
+mdwiki_list = {}
 mdwiki_changed_list = []
 mdwiki_changed_rd = []
 enwp_list = []
@@ -218,12 +218,12 @@ def set_logger():
     logger.addHandler(stdout_handler)
 
 def get_mdwiki_page_list():
-    mdwiki_list = []
+    #mdwiki_list = []
     print('Getting mdwiki pages')
-    with open('data/mdwiki.tsv') as f:
-        txt = f.read()
+    #with open('data/mdwiki.tsv') as f:
+    #    txt = f.read()
     # last item can be ''
-    mdwiki_list = txt.split('\n')[:-1]
+    mdwiki_list = read_json_file('data/mdwiki.json')
     return mdwiki_list
 
 def send_failed_url_email():

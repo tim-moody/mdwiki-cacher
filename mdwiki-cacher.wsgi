@@ -11,7 +11,7 @@ from requests_cache import CachedSession
 from common import * # functions common to several modules
 import constants as CONST
 
-mdwiki_list = []
+mdwiki_list = {}
 mdwiki_redirects = {}
 mdwiki_redirect_list = []
 mdwiki_rd_lookup = {}
@@ -392,12 +392,15 @@ def get_redir_path_v2(path): # top level
 
     for title in mdiwki_article_list:
         # we are missing to id
-        query = CONST.rest_page + title + '/bare'
-        resp = requests.get(CONST.mdwiki_domain + query, headers=CONST.cacher_headers)
-        page_meta = json.loads(resp.content)
+        # query = CONST.rest_page + title + '/bare'
+        # resp = requests.get(CONST.mdwiki_domain + query, headers=CONST.cacher_headers)
+        # page_meta = json.loads(resp.content)
         redirects = get_mdwiki_redirects(title) # all redirects for this title known to mdwiki
-        page_ns = redirects[0]['ns']
-        page_dict = {"pageid":page_meta['id'],"ns": page_ns, "title":"Gout", "redirects": redirects}
+        # page_ns = redirects[0]['ns']
+        page_dict = {"pageid":mdwiki_list['title']['id'],
+                    "ns":mdwiki_list['title']['ns'],
+                    "title":title,
+                    "redirects":redirects}
 
         batch_resp['query']['pages'].append(page_dict)
 
@@ -680,10 +683,7 @@ def get_enwp_page_list():
 def get_mdwiki_page_list():
     global mdwiki_list
     try:
-        with open('data/mdwiki.tsv') as f:
-            txt = f.read()
-        mdwiki_list = txt.split('\n')[:-1]
-        # last item can be ''
+        mdwiki_list = read_json_file('data/mdwiki.json')
     except Exception as error:
         print(error)
         print('Failed to read mdwiki.tsv. Exiting.')

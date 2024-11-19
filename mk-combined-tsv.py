@@ -34,7 +34,7 @@ MDWIKI_EXCLUDE_PAGES = ['Citation/CS1/styles.css',
     'Navbox/styles.css',
     'Reflist/styles.css']
 
-mdwiki_list = []
+mdwiki_list = {}
 mdwiki_redirects_raw = {}
 mdwiki_redirect_list = []
 mdwiki_rd_lookup = {}
@@ -93,7 +93,8 @@ def mk_combined():
         return False
     logging.info('Getting list of pages from EN WP Succeeded.')
 
-    write_output(mdwiki_list, MDWIKI_CACHER_DATA + 'mdwiki.tsv')
+    #write_output(mdwiki_list, MDWIKI_CACHER_DATA + 'mdwiki.tsv')
+    write_json_file(mdwiki_list, MDWIKI_CACHER_DATA + 'mdwiki.json')
     write_output(enwp_list, MDWIKI_CACHER_DATA + 'enwp.tsv')
     #en_wp_only = en_wp_med - mdwiki_list # items only in en wp
     #en_wip_redir = get_en_wp_redirects(en_wp_only)
@@ -161,7 +162,7 @@ def can_run(force):
     return True
 
 def get_mdwiki_list(apfilterredir='nonredirects'):
-    md_wiki_pages = []
+    md_wiki_pages = {} # 11/19/2024 also capture page id and ns
     for namesp in ['0']:
         # q = 'https://mdwiki.org/w/api.php?action=query&apnamespace=' + namesp + '&format=json&list=allpages&aplimit=max&apcontinue='
         q = 'https://mdwiki.org/w/api.php?action=query&apnamespace=' + namesp + '&format=json'
@@ -180,7 +181,8 @@ def get_mdwiki_list(apfilterredir='nonredirects'):
             for page in pages:
                 #allpages[page['title']] = page
                 if page not in MDWIKI_EXCLUDE_PAGES:
-                    md_wiki_pages.append(page['title'].replace(' ', '_'))
+                    md_wiki_pages[page['title'].replace(' ', '_')] = {'pageid':page['pageid'], 'ns': page['ns']}
+                    #md_wiki_pages.append(page['title'].replace(' ', '_'))
             if not apcontinue:
                 break
             loop_count -= 1
