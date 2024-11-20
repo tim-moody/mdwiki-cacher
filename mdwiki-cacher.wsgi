@@ -407,7 +407,8 @@ def get_redir_path_v2(path): # top level
     return respond_json(batch_resp)
 
 def calc_redir_query(article_list):
-    more_rd_query = '/w/api.php?action=query&format=json&prop=redirects&rdlimit=max&rdnamespace=0&redirects=true&titles='
+    # more_rd_query = '/w/api.php?action=query&format=json&prop=redirects&rdlimit=max&rdnamespace=0&redirects=true&titles='
+    more_rd_query = '/w/api.php?action=query&format=json&prop=redirects%7Crevisions%7Cpageimages%7Ccoordinates&rdlimit=max&rdnamespace=0%7C3000%7C3002&redirects=true&formatversion=2&titles='
     if len(article_list) > 0:
         query = more_rd_query + article_list[0]
         for article in article_list[1:]:
