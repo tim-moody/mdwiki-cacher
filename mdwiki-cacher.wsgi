@@ -139,7 +139,7 @@ def do_GET(path):
                 # return get_redir_path(path)
                 # return get_mdwiki_api_url(path)
                 # return get_redirects_from_mdwiki(path)
-                return get_redir_path_v2(path)
+                return get_redir_path_v3(path)
             else:
                 # this is not expected for zims
                 # but can happen when mirroring site
@@ -375,11 +375,11 @@ def get_redir_path_v2(path): # top level
 
     pages_resp = {}
     title_page_ids = {}
-    mdiwki_article_list = []
+    mdwiki_article_list = []
     enwp_article_list = []
     for title in titles: # split out titles for subsequent processing
         if title in mdwiki_list:
-            mdiwki_article_list.append(title)
+            mdwiki_article_list.append(title)
         elif title in enwp_list:
             enwp_article_list.append(title)
     # get enwp article redirects if any
@@ -390,7 +390,7 @@ def get_redir_path_v2(path): # top level
     else:
         batch_resp = calc_empty_batch_resp()
 
-    for title in mdiwki_article_list:
+    for title in mdwiki_article_list:
         # we are missing to id
         # query = CONST.rest_page + title + '/bare'
         # resp = requests.get(CONST.mdwiki_domain + query, headers=CONST.cacher_headers)
@@ -404,6 +404,34 @@ def get_redir_path_v2(path): # top level
 
         batch_resp['query']['pages'].append(page_dict)
 
+    return respond_json(batch_resp)
+
+def get_redir_path_v3(path): # top level
+    # simplify
+    # get resp for mdwiki and enwp lists separately and merge
+    args = parse_qs(urlparse(path).query)
+    titles = args['titles'][0].split('|')
+    mdwiki_article_list = []
+    enwp_article_list = []
+    for title in titles: # split out titles for subsequent processing
+        if title in mdwiki_list:
+            mdwiki_article_list.append(title)
+        elif title in enwp_list:
+            enwp_article_list.append(title)
+    # get enwp article redirects if any
+    enwp_query = calc_redir_query(enwp_article_list)
+    mdwiki_query = calc_redir_query(mdwiki_article_list)
+    if enwp_query:
+        resp = requests.get(CONST.enwp_domain + enwp_query, headers=CONST.cacher_headers)
+        enwp_batch_resp = json.loads(resp.content)
+    else:
+        enwp_batch_resp = {}
+    if mdwiki_query:
+        resp = requests.get(CONST.mdwiki_domain + mdwiki_query, headers=CONST.cacher_headers)
+        mdwiki_batch_resp = json.loads(resp.content)
+    else:
+        mdwiki_batch_resp = {}
+    batch_resp = mdwiki_batch_resp | enwp_batch_resp
     return respond_json(batch_resp)
 
 def calc_redir_query(article_list):
