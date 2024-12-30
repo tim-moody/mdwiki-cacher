@@ -1,6 +1,6 @@
 # constants
 
-VERSION = '0.9.1'
+VERSION = '0.9.2'
 
 mdwiki_domain = 'https://mdwiki.org'
 enwp_domain = 'https://en.wikipedia.org'

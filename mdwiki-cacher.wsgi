@@ -409,6 +409,7 @@ def get_redir_path_v2(path): # top level
 def get_redir_path_v3(path): # top level
     # simplify
     # get resp for mdwiki and enwp lists separately and merge
+    # handle continue logic
     args = parse_qs(urlparse(path).query)
     titles = args['titles'][0].split('|')
     mdwiki_article_list = []
@@ -422,17 +423,39 @@ def get_redir_path_v3(path): # top level
     enwp_query = calc_redir_query(enwp_article_list)
     mdwiki_query = calc_redir_query(mdwiki_article_list)
     if enwp_query:
-        resp = requests.get(CONST.enwp_domain + enwp_query, headers=CONST.cacher_headers)
-        enwp_batch_resp = json.loads(resp.content)
+        # resp = requests.get(CONST.enwp_domain + enwp_query, headers=CONST.cacher_headers)
+        # enwp_batch_resp = json.loads(resp.content)
+        enwp_batch_resp = rdcont_query(CONST.enwp_domain + enwp_query)
     else:
         enwp_batch_resp = {}
     if mdwiki_query:
-        resp = requests.get(CONST.mdwiki_domain + mdwiki_query, headers=CONST.cacher_headers)
-        mdwiki_batch_resp = json.loads(resp.content)
+        # resp = requests.get(CONST.mdwiki_domain + mdwiki_query, headers=CONST.cacher_headers)
+        # mdwiki_batch_resp = json.loads(resp.content)
+        mdwiki_batch_resp = rdcont_query(CONST.mdwiki_domain + mdwiki_query)
     else:
         mdwiki_batch_resp = {}
     batch_resp = mdwiki_batch_resp | enwp_batch_resp
     return respond_json(batch_resp)
+
+def rdcont_query(request):
+    req = request
+    rdcontinue = ''
+    batch_result = {}
+    while True:
+        req = request + rdcontinue
+        resp = requests.get(req, headers=CONST.cacher_headers)
+        result = json.loads(resp.content)
+        if 'error' in result:
+            raise Exception(result['error'])
+        if 'warnings' in result:
+            print(result['warnings'])
+        if 'query' in result:
+            batch_result = batch_result | result['query']
+        if 'continue' not in result:
+            break
+        rdcontinue = '&rdcontinue=' + result['continue']['rdcontinue']
+        print('rdcontinue = ' + result['continue']['rdcontinue'])
+    return batch_result
 
 def calc_redir_query(article_list):
     # more_rd_query = '/w/api.php?action=query&format=json&prop=redirects&rdlimit=max&rdnamespace=0&redirects=true&titles='
@@ -444,6 +467,13 @@ def calc_redir_query(article_list):
     else:
         query = None
     return query
+
+def calc_request():
+    request = {
+        'action': 'query',
+        'format': 'json',
+        'prop':
+    }
 
 def calc_empty_batch_resp():
     #batch_str = '{"batchcomplete":true,"warnings":{"main":{"warnings":"Unrecognized parameter: colimit."},'
