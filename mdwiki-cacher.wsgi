@@ -468,13 +468,6 @@ def calc_redir_query(article_list):
         query = None
     return query
 
-def calc_request():
-    request = {
-        'action': 'query',
-        'format': 'json',
-        'prop':
-    }
-
 def calc_empty_batch_resp():
     #batch_str = '{"batchcomplete":true,"warnings":{"main":{"warnings":"Unrecognized parameter: colimit."},'
     #batch_str += '"query":{"warnings":"Unrecognized value for parameter \"prop\": coordinates"}},"query":{"pages":[]'
