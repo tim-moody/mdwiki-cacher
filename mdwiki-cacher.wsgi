@@ -450,7 +450,7 @@ def rdcont_query(request):
         if 'warnings' in result:
             print(result['warnings'])
         if 'query' in result:
-            batch_result = batch_result | result['query']
+            batch_result = batch_result | result
         if 'continue' not in result:
             break
         rdcontinue = '&rdcontinue=' + result['continue']['rdcontinue']
