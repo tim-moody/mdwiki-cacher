@@ -73,9 +73,46 @@ for i in range(0, 50):
     if p2red != p3red:
         print(i)
 
+>>> r3.keys()
+dict_keys(['batchcomplete', 'warnings', 'query', 'limits'])
+
+>>> r3['batchcomplete']
+True
+
+>>> r1['warnings']
+{'redirects': {'warnings': 'Unrecognized values for parameter "rdnamespace": 3000, 3002'}}
+>>> r2['warnings']
+{'redirects': {'warnings': 'Unrecognized values for parameter "rdnamespace": 3000, 3002'}}
+>>> r3['warnings']
+{'redirects': {'warnings': 'Unrecognized values for parameter "rdnamespace": 3000, 3002'}}
+
+>>> r1['limits']
+{'redirects': 500, 'coordinates': 500}
+>>> r2['limits']
+{'redirects': 500, 'coordinates': 500}
+>>> r3['limits']
+{'redirects': 500, 'coordinates': 500}
+
+>>> r1['query'].keys()
+dict_keys(['normalized', 'redirects', 'pages'])
+>>> r2['query'].keys()
+dict_keys(['normalized', 'redirects', 'pages'])
+>>> r3['query'].keys()
+dict_keys(['normalized', 'redirects', 'pages'])
+
+>>> r1['query']['normalized'] == r2['query']['normalized']
+True
+>>> r1['query']['normalized'] == r3['query']['normalized']
+True
+>>> r1['query']['redirects'] == r3['query']['redirects']
+True
+>>> r1['query']['redirects'] == r2['query']['redirects']
+True
+
+return_batch = {'batchcomplete': True, 'warnings': {}, 'query': {}, 'limits': {}}
 
 
-pn = p1 | p2 | p3
+
 ########################
 
 q = '/w/api.php?action=query&format=json&prop=redirects%7Crevisions%7Cpageimages%7Ccoordinates&rdlimit=max&rdnamespace=0%7C3000%7C3002&redirects=true&formatversion=2&titles='
@@ -311,4 +348,3 @@ u1 = ' https://mdwiki.wmcloud.org/w/api.php?action=visualeditor&mobileformat=htm
 mdwiki_db  = 'mdwiki_api'
 mdwiki_session  = CachedSession(mdwiki_db, backend='sqlite')
 resp = mdwiki_session.get(u1)
-

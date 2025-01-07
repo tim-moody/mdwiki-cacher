@@ -440,17 +440,32 @@ def get_redir_path_v3(path): # top level
 def rdcont_query(request):
     req = request
     rdcontinue = ''
-    batch_result = {}
+    batch_result = {'batchcomplete': True, 'warnings': {}, 'query': {}, 'limits': {}}
     while True:
         req = request + rdcontinue
         resp = requests.get(req, headers=CONST.cacher_headers)
         result = json.loads(resp.content)
         if 'error' in result:
             raise Exception(result['error'])
-        if 'warnings' in result:
+        if 'warnings' in result: # same in each continue result
             print(result['warnings'])
+            batch_result['warnings'] = result['warnings']
+        if 'limits' in result: # same in each continue result
+            batch_result['limits'] = result['limits']
         if 'query' in result:
-            batch_result = batch_result | result
+            if rdcontinue == '': # first continue result so initialize
+                batch_result['query']['normalized'] = result['query']['normalized']
+                batch_result['query']['redirects'] = result['query']['redirects']
+                batch_result['query']['pages'] = result['query']['pages']
+            else: # subsequent continues can have more redirects
+                for i in range(0, 50): # assume exactly 50 pages per batch
+                    page_redir = result['query']['pages'][i].get('redirects', [])
+                    if 'redirects' not in batch_result['query']['pages'][i]:
+                        batch_result['query']['pages'][i]['redirects'] = page_redir
+                    else:
+                        for j in range(0, len(page_redir):
+                            if page_redir[j] not in batch_result['query']['pages'][i]['redirects']:
+                                batch_result['query']['pages'][i]['redirects'].append(page_redir[j])
         if 'continue' not in result:
             break
         rdcontinue = '&rdcontinue=' + result['continue']['rdcontinue']
