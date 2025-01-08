@@ -455,7 +455,8 @@ def rdcont_query(request):
         if 'query' in result:
             if rdcontinue == '': # first continue result so initialize
                 batch_result['query']['normalized'] = result['query']['normalized']
-                batch_result['query']['redirects'] = result['query']['redirects']
+                if 'redirects' in result['query']:
+                    batch_result['query']['redirects'] = result['query']['redirects']
                 batch_result['query']['pages'] = result['query']['pages']
             else: # subsequent continues can have more redirects
                 for i in range(0, len(result['query']['pages'])): # assume same number in each continue read
@@ -479,6 +480,7 @@ def calc_redir_query(article_list):
         query = more_rd_query + article_list[0]
         for article in article_list[1:]:
             query += '%7C' + article
+        query += '&colimit=max'
     else:
         query = None
     return query
