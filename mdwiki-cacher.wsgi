@@ -458,12 +458,12 @@ def rdcont_query(request):
                 batch_result['query']['redirects'] = result['query']['redirects']
                 batch_result['query']['pages'] = result['query']['pages']
             else: # subsequent continues can have more redirects
-                for i in range(0, 50): # assume exactly 50 pages per batch
+                for i in range(0, len(result['query']['pages'])): # assume same number in each continue read
                     page_redir = result['query']['pages'][i].get('redirects', [])
                     if 'redirects' not in batch_result['query']['pages'][i]:
                         batch_result['query']['pages'][i]['redirects'] = page_redir
                     else:
-                        for j in range(0, len(page_redir):
+                        for j in range(0, len(page_redir)):
                             if page_redir[j] not in batch_result['query']['pages'][i]['redirects']:
                                 batch_result['query']['pages'][i]['redirects'].append(page_redir[j])
         if 'continue' not in result:
