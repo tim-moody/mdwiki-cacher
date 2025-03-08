@@ -139,11 +139,13 @@ def do_GET(path):
                 # return get_redir_path(path)
                 # return get_mdwiki_api_url(path)
                 # return get_redirects_from_mdwiki(path)
-                return get_redir_path_v3(path)
+                # return get_redir_path_v3(path)
+                return get_single_redirect(path)
             else:
                 # this is not expected for zims
                 # but can happen when mirroring site
                 # print("Skipping Unknown Path: " + str(path))
+                # 3/7/2025 this is observed with no title, ? as probe of api
                 return get_mdwiki_other_url(path)
         elif '&page=' in path:
             # page = path.split('&page=')[1]
@@ -454,7 +456,8 @@ def rdcont_query(request):
             batch_result['limits'] = result['limits']
         if 'query' in result:
             if rdcontinue == '': # first continue result so initialize
-                batch_result['query']['normalized'] = result['query']['normalized']
+                if 'normalized' in result['query']:
+                    batch_result['query']['normalized'] = result['query']['normalized']
                 if 'redirects' in result['query']:
                     batch_result['query']['redirects'] = result['query']['redirects']
                 batch_result['query']['pages'] = result['query']['pages']
@@ -484,6 +487,19 @@ def calc_redir_query(article_list):
     else:
         query = None
     return query
+
+def get_single_redirect(path):
+    if VERBOSE:
+        print('In get_single_redirect', path)
+
+    title = path.split('&titles=')[1].split('&colimit=')[0]
+    if title in mdwiki_list:
+        url = CONST.mdwiki_domain + path
+    else:
+        url = CONST.enwp_domain + path
+
+    resp = requests.get(url, headers=CONST.cacher_headers) # no cache for now
+    return breakout_resp(resp)
 
 def calc_empty_batch_resp():
     #batch_str = '{"batchcomplete":true,"warnings":{"main":{"warnings":"Unrecognized parameter: colimit."},'

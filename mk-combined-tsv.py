@@ -286,7 +286,7 @@ def get_last_run():
     if last_success_date:
         return last_success_date
 
-    log_numbers = range(1, LOG_BACKUP_COUNT)
+    log_numbers = range(1, LOG_BACKUP_COUNT + 1)
     for log_number in log_numbers:
         last_success_date = read_last_run('.' + str(log_number))
         if last_success_date:
