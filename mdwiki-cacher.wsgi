@@ -93,7 +93,11 @@ def application(environ, start_response):
         if req_uri == mdwiki_intro_page: # reset count on start of run
             skipped_page_count = 0
         if req_uri in mdwiki_urls: # some hardcoded urls that must go to mdwiki
-            status, response_headers, response_body = get_mdwiki_url_direct(req_uri)
+            # status, response_headers, response_body = get_mdwiki_url_direct(req_uri)
+            url = CONST.mdwiki_domain + req_uri
+            headers = get_request_headers()
+            resp = requests.get(url, headers=CONST.cacher_headers)
+            status, response_headers, response_body = breakout_resp(resp)
 
         elif req_uri.startswith(nonwiki_url):
             status, response_headers, response_body = do_nonwiki(req_uri, environ)
