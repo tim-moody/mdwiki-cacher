@@ -674,7 +674,7 @@ def respond_rest_404(reason, path):
     return status_code, headers, body
 
 def respond_action_no_page(path):
-    print("Skipping " + reason + " Page: " + str(path))
+    print("Skipping Page: " + str(path))
     # REWRITE  send_response(404)
     # REWRITE  send_header('Content-type', 'text/html')
     # REWRITE  end_headers()
