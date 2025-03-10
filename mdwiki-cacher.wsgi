@@ -161,7 +161,7 @@ def do_GET(path):
                 return get_enwp_api_url(path, page)
                 # return get_enwp_url_direct(path) # changed 3/5/2022
             else:
-                return respond_404('Unknown', path)
+                return respond_action_no_page(path)
         else:
             return get_mdwiki_other_url(path) # use mdwiki for anything else
 
@@ -671,6 +671,18 @@ def respond_rest_404(reason, path):
     body = b'{"errorKey":"rest-nonexistent-title",'
     body += b'"messageTranslations":{"en":"The specified page (' + bpath
     body += b') does not exist"},"httpCode":404,"httpReason":"Not Found"}'
+    return status_code, headers, body
+
+def respond_action_no_page(path):
+    print("Skipping " + reason + " Page: " + str(path))
+    # REWRITE  send_response(404)
+    # REWRITE  send_header('Content-type', 'text/html')
+    # REWRITE  end_headers()
+    # REWRITE  wfile.write(b'Unknown Page')
+    headers = [('Content-type', 'application/json')]
+    status_code = '200'
+    bpath = str.encode(path)
+    body = b'{"error":{"code":"missingtitle","info":"The page you specified does not exist."},"servedby":"mdwiki-cacher"}'
     return status_code, headers, body
 
 def start_response( resp):
