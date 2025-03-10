@@ -201,20 +201,25 @@ def get_rest_api_page(path):
         print('In get_rest_api_page', path)
     page = path.split('/w/rest.php/v1/page/')[1]
     page = page.split('/')[0]
-    if page in mdwiki_list:
+    unquoted_page = unquote(page)
+
+    if unquoted_page in mdwiki_list:
         url = CONST.mdwiki_domain + path
         resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
-    elif page in enwp_list:
+    elif unquoted_page in enwp_list:
         url = CONST.enwp_domain + path
         resp = enwp_api_session.get(url, headers=CONST.cacher_headers)
     else:
-        return respond_rest_404('Unknown Page', path)
-    if resp.status_code == 404:
-        return respond_rest_404('Unknown Page', path)
-    if resp.status_code == 500:
-        return respond_rest_404('500 Error', path)
-    if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
-        return respond_rest_404('Not 200 or Error', path)
+        return respond_action_no_page(path)
+
+    # back out this logic 3/10/2025
+    #if resp.status_code == 404:
+    #    return respond_rest_404('Unknown Page', path)
+    #if resp.status_code == 500:
+    #    return respond_rest_404('500 Error', path)
+    #if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
+    #    return respond_rest_404('Not 200 or Error', path)
+
     return breakout_resp(resp)
 
 def get_rest_api(path):
