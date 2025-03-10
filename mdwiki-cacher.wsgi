@@ -155,11 +155,13 @@ def do_GET(path):
             # page = path.split('&page=')[1]
             args = parse_qs(urlparse(path).query)
             page = args['page'][0].replace(' ', '_')
-            if page in mdwiki_list:
+            unquoted_page = unquote(page)
+            if unquoted_page in mdwiki_list:
                 return get_mdwiki_api_url(path)
-            elif page in enwp_list:
-                return get_enwp_api_url(path, page)
-                # return get_enwp_url_direct(path) # changed 3/5/2022
+            elif unquoted_page in enwp_list:
+                # return get_enwp_api_url(path, page)
+                return get_enwp_url_direct(path) # changed 3/5/2022; 3/10/2025 try again
+
             else:
                 return respond_action_no_page(path)
         else:
@@ -299,14 +301,15 @@ def get_mdwiki_url_direct(path):
     # REWRITE  wfile.write(resp.content)
     return breakout_resp(resp)
 
-def get_enwp_url_direct(path): # not used as causes random failure
+def get_enwp_url_direct(path): # 2025 try this again
+    # not used as causes random failure 2022
     # ADD RETRY
     url = CONST.enwp_domain + path
     headers = get_request_headers()
     resp = requests.get(url, headers)
 
-    if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
-        return respond_404('Not 200 or Error', path)
+    #if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
+    #   return respond_404('Not 200 or Error', path)
     return breakout_resp(resp)
 
 def get_request_headers():
