@@ -6,7 +6,7 @@ import requests
 import json
 import base64
 # import pymysql.cursors
-from urllib.parse import urljoin, urldefrag, urlparse, parse_qs
+from urllib.parse import urljoin, urldefrag, urlparse, parse_qs, unquote
 from requests_cache import CachedSession
 from common import * # functions common to several modules
 import constants as CONST
@@ -497,7 +497,8 @@ def get_single_redirect(path):
         print('In get_single_redirect', path)
 
     title = path.split('&titles=')[1].split('&colimit=')[0]
-    if title in mdwiki_list:
+    unquoted_title = unquote(title)
+    if unquoted_title in mdwiki_list:
         url = CONST.mdwiki_domain + path
     else:
         url = CONST.enwp_domain + path
