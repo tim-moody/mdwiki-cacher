@@ -3,6 +3,7 @@ import sys
 import requests
 import json
 from datetime import datetime
+from urllib.parse import unquote
 
 def is_medicine_tsv_avail():
     # e.g. http://download.openzim.org/wp1/enwiki_2022-03/customs/medicine.tsv
@@ -28,6 +29,15 @@ def get_zimfarm_stat(recipe):
     zimfarm_api = 'https://api.farm.openzim.org/v1/schedules/'
     r = requests.get(zimfarm_api + recipe)
     return r.json()
+
+def page_encode(page):
+    # encoded_page = page.replace('_', '%20').replace('/', '%2F').replace(':', '%3A').replace("'", '%27').replace("+", '%2B')
+    encoded_page = page.replace(' ', '_').replace('/', '%2F').replace(':', '%3A').replace("'", '%27').replace("+", '%2B')
+    return encoded_page
+
+def page_decode(encoded_page):
+    page = unquote(encoded_page)
+    return page
 
 # taken from sp_lib
 def read_json_file(file_path):

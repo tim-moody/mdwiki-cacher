@@ -35,6 +35,8 @@ enwp_api_session = CachedSession(CONST.enwp_api_cache, backend='filesystem')
 
 parse_page = CONST.mdwiki_domain + CONST.parse_page
 videdit_page = CONST.mdwiki_domain + CONST.videdit_page
+rest_page = CONST.mdwiki_domain + CONST.rest_page
+wiki_page = CONST.mdwiki_domain + CONST.wiki_page
 
 mdwiki_changed_list = []
 mdwiki_changed_rd = []
@@ -169,19 +171,24 @@ def NONE_copy_cache(): # was run from mdwiki-cache/cache-tests
                         print('# %i Retrying URL: %s\n', i, str(url))
                         time.sleep(i * sleep_secs)
 
+def check_enwp_list_cache(enwp_list):
+    for page in enwp_list:
+        url = CONST.enwp_domain + CONST.rest_page + page_encode(page) + '/html'
+        if not enwp_api_session.cache.contains(url=url):
+            print('Parse URL not cached: ', url)
+
 def check_enwp_cache():
     global enwp_uncached_pages
     enwp_uncached_pages.clear()
-    enwp_parse_page = enwp_domain + parse_page
-    enwp_videdit_page = enwp_domain + videdit_page
-
+    enwp_parse_page = CONST.enwp_domain + parse_page
+    enwp_videdit_page = CONST.enwp_domain + videdit_page
     for page in enwp_list:
         url = enwp_parse_page + page.replace('_', '%20').replace('/', '%2F').replace(':', '%3A').replace("'", '%27').replace("+", '%2B')
-        if not enwp_session.cache.contains(url=url):
+        if not enwp_api_session.cache.contains(url=url):
             enwp_uncached_pages.add(page)
             print('Parse URL not cached: ', url)
         url2 = enwp_videdit_page + page
-        if not enwp_session.cache.contains(url=url2):
+        if not enwp_api_session.cache.contains(url=url2):
             enwp_uncached_pages.add(page)
             print('Videdit URL not cached: ', url2)
 

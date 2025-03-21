@@ -1,6 +1,6 @@
 # constants
 
-VERSION = '0.9.2'
+VERSION = '1.0.1'
 
 mdwiki_domain = 'https://mdwiki.org'
 enwp_domain = 'https://en.wikipedia.org'
@@ -25,7 +25,10 @@ cacher_headers =  {'User-Agent': user_agent}
 # enwp_other_session = CachedSession(CONST.enwp_api_other_cache, backend='filesystem')
 # uncached_session = CachedSession(expire_after=DO_NOT_CACHE)
 
-parse_page = '/w/api.php?action=parse&format=json&prop=modules%7Cjsconfigvars%7Cheadhtml&page='
+modules_query = '/w/api.php?action=parse&format=json&prop=modules%7Cjsconfigvars%7Cheadhtml&page='
 videdit_page = '/w/api.php?action=visualeditor&mobileformat=html&format=json&paction=parse&page='
+redirect_query = '/w/api.php?action=query&format=json&prop=redirects%7Crevisions%7Cpageimages&rdlimit=max&rdnamespace=0%7C3000%7C3002&redirects=true&formatversion=2&titles='
+last_revision_query = '/w/api.php?action=query&prop=revisions&rvprop=timestamp&format=json&formatversion=2&redirects=true&titles='
+
 rest_page = '/w/rest.php/v1/page/'
 wiki_page = '/wiki/'
