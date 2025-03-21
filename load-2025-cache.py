@@ -49,6 +49,7 @@ def main():
 def test():
     load_cache('enwp', enwp_list)
     load_cache('mdwiki', mdwiki_list)
+    cached_urls = list(SESSION.cache.urls)
 
 def load_cache(target, article_list):
     for title in article_list:
