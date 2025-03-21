@@ -27,11 +27,19 @@ enwp_list = []
 
 expiry_days = timedelta(days=7)
 
+SESSION = CachedSession('2025_cache', backend='sqlite')
+
 mdwiki_api_session = CachedSession(CONST.mdwiki_api_cache, backend='filesystem')
 mdwiki_wiki_session = CachedSession(CONST.mdwiki_wiki_cache, backend='filesystem', expire_after=expiry_days)
 mdwiki_other_session = CachedSession(CONST.mdwiki_other_cache, backend='filesystem', expire_after=expiry_days)
 enwp_api_session = CachedSession(CONST.enwp_api_cache, backend='filesystem')
 enwp_other_session = CachedSession(CONST.enwp_other_cache, backend='filesystem', expire_after=expiry_days)
+
+mdwiki_api_session = SESSION
+mdwiki_wiki_session = SESSION
+mdwiki_other_session = SESSION
+enwp_api_session = SESSION
+enwp_other_session = SESSION
 
 mdwiki_intro_page = '/wiki/App%2FIntroPage'
 nonwiki_url = '/nonwiki/'
@@ -40,7 +48,7 @@ uwsgi_log = '/var/log/uwsgi/app/mdwiki-cacher.log'
 extract_api = '/w/api.php?action=query&format=json&titles='
 
 VERSION = CONST.VERSION
-VERBOSE = False
+VERBOSE = True
 skipped_page_count = 0
 
 # /robots.txt handled by nginx
@@ -131,8 +139,8 @@ def do_GET(path):
 
     # TO DO: INTEGRATE THE OTHER APIS
 
-    if path.startswith('/w/rest.api/v1/'):
-        if path.startswith('/w/rest.api/v1/page'):
+    if path.startswith('/w/rest.php/v1/'):
+        if path.startswith('/w/rest.php/v1/page'):
             return get_rest_api_page(path)
         else:
             return get_rest_api(path)
