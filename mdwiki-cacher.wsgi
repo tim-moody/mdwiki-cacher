@@ -163,9 +163,10 @@ def do_GET(path):
             # page = path.split('&page=')[1]
             args = parse_qs(urlparse(path).query)
             page = args['page'][0].replace(' ', '_')
-            if page in mdwiki_list:
+            decoded_page = page_decode(page)
+            if decoded_page in mdwiki_list:
                 return get_mdwiki_api_url(path)
-            elif page in enwp_list:
+            elif decoded_page in enwp_list:
                 return get_enwp_api_url(path, page)
                 # return get_enwp_url_direct(path) # changed 3/5/2022
             else:
@@ -178,7 +179,7 @@ def do_GET(path):
             return get_mdwiki_other_url(path) # will route all media through mdwiki, but no choice
         else:
             # see if path is mdwiki or en wp and set domain
-            article = path.split('/wiki/')[-1]
+            article = path.split('/wiki/')[-1] # this is not encoded?
             if article in mdwiki_list:
                 return get_mdwiki_wiki_url(path)
             elif article in enwp_list:
@@ -207,10 +208,11 @@ def get_rest_api_page(path):
         print('In get_rest_api_page', path)
     page = path.split('/w/rest.php/v1/page/')[1]
     page = page.split('/')[0]
-    if page in mdwiki_list:
+    decoded_page = page_decode(page)
+    if decoded_page in mdwiki_list:
         url = CONST.mdwiki_domain + path
         resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
-    elif page in enwp_list:
+    elif decoded_page in enwp_list:
         url = CONST.enwp_domain + path
         resp = enwp_api_session.get(url, headers=CONST.cacher_headers)
     else:
@@ -360,7 +362,7 @@ def get_enwp_other_url(path):
     return breakout_resp(resp)
 
 # N.B. as of Nov, 2024 we let mdwiki handle multi source redirects
-def get_redirects_from_mdwiki(path): # don't use, too slow
+def get_redirects_from_mdwiki(path): # NOT USED
     if VERBOSE:
         print('In get_redirects_from_mdwiki', path)
     # ADD RETRY
@@ -377,7 +379,7 @@ def get_redirects_from_mdwiki(path): # don't use, too slow
     # REWRITE  wfile.write(resp.content)
     return breakout_resp(resp)
 
-def get_redir_path_v2(path): # top level
+def get_redir_path_v2(path): # NOT USED
     # simplify
     # redirects only reported for each source
     # enwp redirects to mdwiki page ignored
@@ -420,7 +422,7 @@ def get_redir_path_v2(path): # top level
 
     return respond_json(batch_resp)
 
-def get_redir_path_v3(path): # top level
+def get_redir_path_v3(path): # NOT USED
     # simplify
     # get resp for mdwiki and enwp lists separately and merge
     # handle continue logic
@@ -538,7 +540,7 @@ def calc_empty_batch_resp():
                 }
     return batch_resp
 
-def get_redir_path(path): # top level - original
+def get_redir_path(path): # top level - original # NOT USED
     # path queried for redirects can have multiple titles
     # break them out because some could be mdwiki and some enwp
     # the query also requests other properties than redirect
