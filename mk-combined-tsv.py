@@ -132,7 +132,7 @@ def can_run(force):
 def get_mdwiki_list(apfilterredir='nonredirects'):
     md_wiki_pages = []
     for namesp in ['0']:
-        q = 'https://mdwiki.org/w/api.php?action=query&apnamespace=' + namesp + '&format=json&list=allpage'
+        q = 'https://mdwiki.org/w/api.php?action=query&apnamespace=' + namesp + '&format=json&list=allpages'
         q += '&apfilterredir=' + apfilterredir + '&aplimit=max&apcontinue='
         # q = 'https://mdwiki.org/w/api.php?action=query&apnamespace=' + namesp + '&format=json'
         # q += '&list=allpages&apfilterredir=nonredirects&aplimit=max&apcontinue='
@@ -156,8 +156,6 @@ def get_mdwiki_list(apfilterredir='nonredirects'):
                 break
             loop_count -= 1
     return md_wiki_pages
-
-
 
 def get_enwp_list():
     enwp_pages = []
