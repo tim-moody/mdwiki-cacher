@@ -32,7 +32,7 @@ test_enwp = '100med-enwp.tsv'
 test_mdwiki = '100med-mdwiki.tsv'
 
 enwp_list = read_file_list(test_enwp)
-mdwiki_list = read_file_list(test_mdwiki)
+mdwiki_list = read_file_list('data/mdwiki.tsv')
 
 
 # test pages
@@ -50,6 +50,16 @@ def test():
     load_cache('enwp', enwp_list)
     load_cache('mdwiki', mdwiki_list)
     cached_urls = list(SESSION.cache.urls)
+
+def load_mdwiki_cache():
+    global force_refresh
+    global SESSION
+    SESSION = CachedSession('2025_mdwiki_cache', backend='sqlite')
+    force_refresh = True
+    for page in mdwiki_list:
+        page_urls = get_api_calls(CONST.mdwiki_domain, CONST, page)
+        for url in page_urls:
+            refresh_mdwiki_cache_url(url, force_refresh)
 
 def load_cache(target, article_list):
     for title in article_list:
@@ -69,13 +79,13 @@ def refresh_cache_page(target, page, force_refresh=False):
     #url = CONST.enwp_domain + CONST.videdit_page + page
     #refresh_cache_url(url, force_refresh)
 
-def get_api_calls(page):
+def get_api_calls(host, constants, page):
     api_calls = []
-    url = CONST.rest_page + page + '/html' # html from rest
+    url = host + constants.rest_page + page + '/html' # html from rest
     api_calls.append(url)
-    url = CONST.redirect_query + page # revisions and redirects
+    url = host + constants.redirect_query + page # revisions and redirects
     api_calls.append(url)
-    url = CONST.modules_query + page.replace('_', '+') # modules
+    url = host + constants.modules_query + page.replace('_', '+') # modules
     api_calls.append(url)
     return api_calls
 
@@ -163,7 +173,7 @@ def get_last_revision(page):
     data = resp.json()
     return data['query']['pages'][0]['revisions'][0]['timestamp']
 
-def get_last_edit_date(page): # does not do redirects
+def get_last_edit_date(page): # does not do redirects from redirect to real page
     params = {
         'action':"compare",
         'format':"json",

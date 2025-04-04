@@ -172,6 +172,40 @@ def get_enwp_list():
         enwp_pages = []
     return enwp_pages
 
+def get_last_revision_list(target, page_list):
+    revison_list = {}
+    start_page = 0
+    end_page = 0
+    while(start_page < len(page_list)):
+        end_page = start_page + 50
+        revison_list.update(get_50_last_revision_list(target, page_list[start_page:end_page]))
+        start_page = end_page
+    return revison_list
+
+def get_50_last_revision_list(target, batch_page_list):
+    revison_list = {}
+    if len(batch_page_list) > 50:
+        return None
+    pages = batch_page_list[0]
+    for page in batch_page_list[1:]:
+        pages += '|' + page
+    if target == 'enwp':
+        url = CONST.enwp_domain + CONST.last_revision_query + pages
+    else:
+        url = CONST.mdwiki_domain + CONST.last_revision_query + pages
+    try:
+        r = requests.get(url, headers=CONST.cacher_headers).json()
+    except Exception as error:
+        logging.error(error)
+        logging.error('Request mdwiki list failed. Exiting.')
+        return None
+    for item in r['query']['pages']:
+        if item.get('revisions'):
+            revison_list[item['title'].replace(' ', '_')] = item['revisions'][0]['timestamp']
+        else:
+            print('page not found', item)
+    return revison_list
+
 def get_last_run():
     # look for something like 2022-02-19 15:31:35,007 [INFO] List Creation Succeeded.
     last_success_date = read_last_run('') # check current log
