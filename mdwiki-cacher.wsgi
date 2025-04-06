@@ -27,7 +27,7 @@ enwp_list = []
 
 expiry_days = timedelta(days=7)
 
-SESSION = CachedSession('2025_cache', backend='sqlite')
+mdwiki_cache = CachedSession('2025_mdwiki_cache.sqlite', backend='sqlite')
 
 mdwiki_api_session = CachedSession(CONST.mdwiki_api_cache, backend='filesystem')
 mdwiki_wiki_session = CachedSession(CONST.mdwiki_wiki_cache, backend='filesystem', expire_after=expiry_days)
@@ -35,11 +35,11 @@ mdwiki_other_session = CachedSession(CONST.mdwiki_other_cache, backend='filesyst
 enwp_api_session = CachedSession(CONST.enwp_api_cache, backend='filesystem')
 enwp_other_session = CachedSession(CONST.enwp_other_cache, backend='filesystem', expire_after=expiry_days)
 
-mdwiki_api_session = SESSION
-mdwiki_wiki_session = SESSION
-mdwiki_other_session = SESSION
-enwp_api_session = SESSION
-enwp_other_session = SESSION
+mdwiki_api_session = mdwiki_cache
+mdwiki_wiki_session = mdwiki_cache
+mdwiki_other_session = mdwiki_cache
+#enwp_api_session = SESSION
+#enwp_other_session = SESSION
 
 mdwiki_intro_page = '/wiki/App%2FIntroPage'
 nonwiki_url = '/nonwiki/'
@@ -164,13 +164,16 @@ def do_GET(path):
             args = parse_qs(urlparse(path).query)
             page = args['page'][0].replace(' ', '_')
             decoded_page = page_decode(page)
-            if decoded_page in mdwiki_list:
-                return get_mdwiki_api_url(path)
-            elif decoded_page in enwp_list:
-                return get_enwp_api_url(path, page)
-                # return get_enwp_url_direct(path) # changed 3/5/2022
-            else:
-                return respond_action_no_page(path)
+            if '&prop=modules' in path:
+                if decoded_page in mdwiki_list:
+                    return get_mdwiki_modules(path)
+                elif decoded_page in enwp_list:
+                    return get_enwp_api_url(path, page)
+                    # return get_enwp_url_direct(path) # changed 3/5/2022
+                else:
+                    return respond_action_no_page(path)
+            else: # this could be visualeditor&mobileformat, which we are not expecting if we use rest.php
+                    return respond_action_no_page(path)
         else:
             return get_mdwiki_other_url(path) # use mdwiki for anything else
 
@@ -243,6 +246,46 @@ def get_rest_api(path):
     # REWRITE  wfile.write(resp.content)
     return breakout_resp(resp)
 
+def get_mdwiki_modules(path):
+    if VERBOSE:
+        print('In get_mdwiki_modules', path)
+    # ADD RETRY
+    url = CONST.mdwiki_domain + path
+    if mdwiki_cache.cache.contains(url=url):
+        resp = mdwiki_cache.get(url, headers=CONST.cacher_headers)
+        return breakout_resp(resp)
+    else:
+        return respond_modules_no_page(path)
+
+def get_single_redirect(path):
+    if VERBOSE:
+        print('In get_single_redirect', path)
+
+    title = path.split('&titles=')[1].split('&colimit=')[0]
+    unquoted_title = unquote(title)
+    if unquoted_title in mdwiki_list:
+        url = CONST.mdwiki_domain + path
+        return get_mdwiki_redirect(title, path)
+    else:
+        url = CONST.enwp_domain + path
+        resp = requests.get(url, headers=CONST.cacher_headers) # no cache for now
+        return breakout_resp(resp)
+
+def get_mdwiki_redirect(title, path):
+    if VERBOSE:
+        print('In get_mdwiki_redirect', path)
+    # ADD RETRY
+    url = CONST.mdwiki_domain + path
+    if mdwiki_cache.cache.contains(url=url):
+        resp = mdwiki_cache.get(url, headers=CONST.cacher_headers)
+        return breakout_resp(resp)
+    else:
+        return respond_redirects_no_page(title, path)
+
+
+
+####################################
+
 def get_mdwiki_api_url(path):
     if VERBOSE:
         print('In get_mdwiki_api_url', path)
@@ -262,6 +305,17 @@ def get_mdwiki_api_url(path):
     # start_response(resp)
     # REWRITE  wfile.write(resp.content)
     return breakout_resp(resp)
+
+def get_mdwiki_api_url_v2(path):
+    if VERBOSE:
+        print('In get_mdwiki_api_url', path)
+    # ADD RETRY
+    url = CONST.mdwiki_domain + path
+    if mdwiki_api_session.cache.contains(url=url):
+        resp = mdwiki_api_session.get(url, headers=CONST.cacher_headers)
+        return breakout_resp(resp)
+    else:
+        return respond_redirects_no_page(page, path)
 
 def get_mdwiki_wiki_url(path):
     # ADD RETRY
@@ -693,6 +747,33 @@ def respond_action_no_page(path):
     status_code = '200'
     bpath = str.encode(path)
     body = b'{"error":{"code":"missingtitle","info":"The page you specified does not exist."},"servedby":"mdwiki-cacher"}'
+    return status_code, headers, body
+
+def respond_modules_no_page(path):
+    print("Skipping Page: " + str(path))
+    # REWRITE  send_response(404)
+    # REWRITE  send_header('Content-type', 'text/html')
+    # REWRITE  end_headers()
+    # REWRITE  wfile.write(b'Unknown Page')
+    headers = [('Content-type', 'application/json')]
+    status_code = '200'
+    bpath = str.encode(path)
+    body = b'{"error":{"code":"missingtitle","info":"The page you specified does not exist."},"servedby":"mdwiki-cacher"}'
+    return status_code, headers, body
+
+def respond_redirects_no_page(page, path):
+    print("Skipping Page: " + str(path))
+    # REWRITE  send_response(404)
+    # REWRITE  send_header('Content-type', 'text/html')
+    # REWRITE  end_headers()
+    # REWRITE  wfile.write(b'Unknown Page')
+    headers = [('Content-type', 'application/json')]
+    status_code = '200'
+    bpath = str.encode(path)
+    body = b'{"error":{"code":"missingtitle","info":"The page you specified does not exist."},"servedby":"mdwiki-cacher"}'
+    body = b'{"batchcomplete":true,"query":{"pages":[{"ns":0,"title":"'
+    body += page.encode(encoding="utf-8")
+    body += b'","missing":true}]},"limits":{"redirects":5000}}'
     return status_code, headers, body
 
 def start_response( resp):
