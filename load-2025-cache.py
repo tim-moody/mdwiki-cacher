@@ -20,7 +20,7 @@ import constants as CONST
 MDWIKI_CACHER_DIR = '/srv/mdwiki-cacher/'
 os.chdir(MDWIKI_CACHER_DIR)
 
-SESSION = CachedSession('2025_cache', backend='sqlite')
+SESSION = CachedSession('2025_mdwiki_cache', backend='sqlite')
 
 enwp_list = []
 failed_url_list = []

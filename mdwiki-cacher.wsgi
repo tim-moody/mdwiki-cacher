@@ -556,7 +556,7 @@ def calc_redir_query(article_list):
         query = None
     return query
 
-def get_single_redirect(path):
+def get_single_redirectt_no_cache(path):
     if VERBOSE:
         print('In get_single_redirect', path)
 
@@ -876,7 +876,7 @@ def get_enwp_page_list():
 def get_mdwiki_page_list():
     global mdwiki_list
     try:
-        mdwiki_list = read_json_file('data/mdwiki.json')
+        mdwiki_list = read_json_file('data/mdwiki.tsv')
     except Exception as error:
         print(error)
         print('Failed to read mdwiki.tsv. Exiting.')
