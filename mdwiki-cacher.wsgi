@@ -876,7 +876,7 @@ def get_enwp_page_list():
 def get_mdwiki_page_list():
     global mdwiki_list
     try:
-        mdwiki_list = read_json_file('data/mdwiki.tsv')
+        mdwiki_list = read_file_list('data/mdwiki.tsv')
     except Exception as error:
         print(error)
         print('Failed to read mdwiki.tsv. Exiting.')
