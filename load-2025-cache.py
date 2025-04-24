@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# su - www-data -s /bin/bash -c '/srv2/mdwiki-cacher/load-cache.py' for testing
+# su - www-data -s /bin/bash -c '/srv/mdwiki-cacher/load-2025-cache.py' for testing
 import os
 import logging
 import sys
@@ -66,6 +66,7 @@ def load_mdwiki_cache_list(article_list, force_refresh=force_refresh):
             refresh_mdwiki_cache_url(url, force_refresh)
 
 def get_api_calls(host, title):
+    title = page_encode(title)
     api_calls = []
     url = host + CONST.rest_page + title + '/html' # html from rest
     api_calls.append(url)
