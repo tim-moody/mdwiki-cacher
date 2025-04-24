@@ -865,9 +865,7 @@ def get_enwp_page_list():
     global enwp_list
     #mdwiki_redirects = read_json_file('data/mdwiki_redirects.json')
     try:
-        with open('data/enwp.tsv') as f:
-            txt = f.read()
-        enwp_list = txt.split('\n')
+        enwp_list = read_file_list('data/enwp.tsv')
     except Exception as error:
         print(error)
         print('Failed to read enwp.tsv. Exiting.')

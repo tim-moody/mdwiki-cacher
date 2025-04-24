@@ -47,8 +47,7 @@ def main():
     set_logger()
 
 def test():
-    load_cache('enwp', enwp_list)
-    load_cache('mdwiki', mdwiki_list)
+    load_mdwiki_cache()
     cached_urls = list(SESSION.cache.urls)
 
 def load_mdwiki_cache():
@@ -56,46 +55,25 @@ def load_mdwiki_cache():
     global SESSION
     SESSION = CachedSession('2025_mdwiki_cache', backend='sqlite')
     force_refresh = True
-    for page in mdwiki_list:
-        page_urls = get_api_calls(CONST.mdwiki_domain, CONST, page)
+    load_mdwiki_cache_list(mdwiki_list)
+
+def load_mdwiki_cache_list(article_list, force_refresh=force_refresh):
+    global SESSION
+    SESSION = CachedSession('2025_mdwiki_cache', backend='sqlite')
+    for title in article_list:
+        page_urls = get_api_calls(CONST.mdwiki_domain, title)
         for url in page_urls:
             refresh_mdwiki_cache_url(url, force_refresh)
 
-def load_cache(target, article_list):
-    for title in article_list:
-        refresh_cache_page(target, page_encode(title), force_refresh)
-
-def refresh_cache_page(target, page, force_refresh=False):
-
-    url = CONST.rest_page + page + '/html' # html from rest
-    refresh_cache_url(target, url, force_refresh)
-
-    url = CONST.redirect_query + page # revisions and redirects
-    refresh_cache_url(target, url, force_refresh)
-
-    url = CONST.modules_query + page.replace('_', '+') # modules
-    refresh_cache_url(target, url, force_refresh)
-
-    #url = CONST.enwp_domain + CONST.videdit_page + page
-    #refresh_cache_url(url, force_refresh)
-
-def get_api_calls(host, constants, page):
+def get_api_calls(host, title):
     api_calls = []
-    url = host + constants.rest_page + page + '/html' # html from rest
+    url = host + CONST.rest_page + title + '/html' # html from rest
     api_calls.append(url)
-    url = host + constants.redirect_query + page # revisions and redirects
+    url = host + CONST.redirect_query + title # revisions and redirects
     api_calls.append(url)
-    url = host + constants.modules_query + page.replace('_', '+') # modules
+    url = host + CONST.modules_query + title.replace('_', '+') # modules
     api_calls.append(url)
     return api_calls
-
-def refresh_cache_url(target, url, force_refresh):
-    if target == 'enwp':
-        url = CONST.enwp_domain + url
-        refresh_enwp_cache_url(url, force_refresh)
-    else:
-        url = CONST.mdwiki_domain + url
-        refresh_mdwiki_cache_url(url, force_refresh)
 
 def refresh_enwp_cache_url(url, force_refresh):
     global failed_url_list
@@ -152,6 +130,17 @@ def retry_url(url):
         time.sleep(i * sleep_secs)
     return None
 
+def list_mdwiki_not_cached(article_list):
+    global SESSION
+    SESSION = CachedSession('2025_mdwiki_cache', backend='sqlite')
+    not_cached = []
+    for title in article_list:
+        page_urls = get_api_calls(CONST.mdwiki_domain, title)
+        for url in page_urls:
+            if not SESSION.cache.contains(url=url):
+                not_cached.append(url)
+    return not_cached
+
 def get_enwp_url(url, force_refresh): # NOT USED
     # check if url in cache
     # if not get it to add to cache
@@ -167,13 +156,14 @@ def get_enwp_url(url, force_refresh): # NOT USED
             failed_url_list.append(url)
     return
 
-def get_last_revision(page):
+def get_last_revision(page): # NOT USED
     url = CONST.last_revision_query + page
     resp = requests.get(url=url)
     data = resp.json()
     return data['query']['pages'][0]['revisions'][0]['timestamp']
 
-def get_last_edit_date(page): # does not do redirects from redirect to real page
+def get_last_edit_date(page):  # NOT USED
+    # does not do redirects from redirect to real page
     params = {
         'action':"compare",
         'format':"json",
