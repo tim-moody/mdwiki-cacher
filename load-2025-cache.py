@@ -34,6 +34,7 @@ test_mdwiki = '100med-mdwiki.tsv'
 enwp_list = read_file_list(test_enwp)
 mdwiki_list = read_file_list('data/mdwiki.tsv')
 
+cacher_headers = get_cacher_headers()
 
 # test pages
 p1 = 'Adenomere'
@@ -104,7 +105,7 @@ def refresh_mdwiki_cache_url(url, force_refresh):
         return
     try:
         # r = uncached_session.get(url, headers=CONST.cacher_headers)
-        r = requests.get(url, headers=CONST.cacher_headers)
+        r = requests.get(url, headers=cacher_headers)
     except:
         get_except = True
 
@@ -122,7 +123,7 @@ def retry_url(url):
     for i in range(10):
         get_except = False
         try:
-            resp = requests.get(url, headers=CONST.cacher_headers) # did not use mdwiki_uncached_session to avoid conflict on retry
+            resp = requests.get(url, headers=cacher_headers) # did not use mdwiki_uncached_session to avoid conflict on retry
         except:
             get_except = True
         if not get_except and resp.status_code != 503 and not resp.content.startswith(b'{"error":'):

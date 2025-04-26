@@ -2,8 +2,10 @@
 import sys
 import requests
 import json
+import yaml
 from datetime import datetime
 from urllib.parse import unquote
+import constants as CONST
 
 def is_medicine_tsv_avail():
     # e.g. http://download.openzim.org/wp1/enwiki_2022-03/customs/medicine.tsv
@@ -38,6 +40,12 @@ def page_encode(page):
 def page_decode(encoded_page):
     page = unquote(encoded_page)
     return page
+
+def get_cacher_headers():
+    tokens = read_yaml('data/token.yml')
+    cacher_headers = CONST.cacher_headers
+    cacher_headers.update({'Authorization': 'Bearer {}'.format(tokens['cacher_token'])})
+    return cacher_headers
 
 # taken from sp_lib
 def read_json_file(file_path):
@@ -83,4 +91,14 @@ def read_file(file_path, mode='rt'):
             return f.read()
     except OSError as e:
         print('Unable to read file', e)
+        raise
+
+def read_yaml(file_name, loader=yaml.SafeLoader):
+    try:
+        with open(file_name, 'r') as f:
+            y = yaml.load(f, Loader=loader)
+            if y == None: # file is empty
+                y = {}
+            return y
+    except:
         raise
