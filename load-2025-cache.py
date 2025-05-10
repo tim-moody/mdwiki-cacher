@@ -23,6 +23,7 @@ os.chdir(MDWIKI_CACHER_DIR)
 SESSION = CachedSession('2025_mdwiki_cache', backend='sqlite')
 
 enwp_list = []
+failed_mdwiki_articles = {}
 failed_url_list = []
 
 ENWP_CACHE_HIST_FILE = 'enwp_cache-refresh-hist.txt'
@@ -60,11 +61,14 @@ def load_mdwiki_cache():
 
 def load_mdwiki_cache_list(article_list, force_refresh=force_refresh):
     global SESSION
+    global failed_mdwiki_articles
     SESSION = CachedSession('2025_mdwiki_cache', backend='sqlite')
     for title in article_list:
         page_urls = get_api_calls(CONST.mdwiki_domain, title)
         for url in page_urls:
-            refresh_mdwiki_cache_url(url, force_refresh)
+            if not refresh_mdwiki_cache_url(url, force_refresh):
+                failed_mdwiki_articles[title] = 'FAILED'
+                break
 
 def get_api_calls(host, title):
     title = page_encode(title)
@@ -102,7 +106,7 @@ def refresh_mdwiki_cache_url(url, force_refresh):
     global failed_url_list
     get_except = False
     if not force_refresh and SESSION.cache.contains(url=url):
-        return
+        return True
     try:
         # r = uncached_session.get(url, headers=CONST.cacher_headers)
         r = requests.get(url, headers=cacher_headers)
@@ -110,12 +114,16 @@ def refresh_mdwiki_cache_url(url, force_refresh):
         get_except = True
 
     if get_except or r.status_code == 503 or r.content.startswith(b'{"error":'):
+        if r.content.startswith(b'{"error":'):
+            print(r.content)
         r = retry_url(url)
     if r:
         SESSION.cache.save_response(r)
+        return True
     else:
         logging.info('Failed to get URL: %s\n', str(url))
         failed_url_list.append(url)
+        return False
 
 def retry_url(url):
     logging.info("Error or 503 in URL: %s\n", str(url))
@@ -128,6 +136,8 @@ def retry_url(url):
             get_except = True
         if not get_except and resp.status_code != 503 and not resp.content.startswith(b'{"error":'):
             return resp
+        if resp.content.startswith(b'{"error":'):
+            print(resp.content)
         logging.info('Retrying URL: %s\n', str(url))
         time.sleep(i * sleep_secs)
     return None
