@@ -85,7 +85,8 @@ def refresh_mdwiki_cache_url(url, force_refresh):
         # r = uncached_session.get(url, headers=CONST.cacher_headers)
         r = requests.get(url, headers=cacher_headers)
     except Exception as e:
-        print (e.message)
+        logging.error(url)
+        logging.error(e.message)
         failed_url_list.append(url)
         return False
     if r.status_code == 503 or r.content.startswith(b'{"error":'):
