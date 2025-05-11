@@ -15,8 +15,6 @@ from requests_cache import FileCache
 from common import *
 import constants as CONST
 
-# ToDo set enwp cache to 1 or 7 day expire or check url against some date
-
 MDWIKI_CACHER_DIR = '/srv/mdwiki-cacher/'
 os.chdir(MDWIKI_CACHER_DIR)
 
@@ -26,13 +24,7 @@ enwp_list = []
 failed_mdwiki_articles = {}
 failed_url_list = []
 
-ENWP_CACHE_HIST_FILE = 'enwp_cache-refresh-hist.txt'
-enwp_api = "https://en.wikipedia.org/w/api.php"
-
-test_enwp = '100med-enwp.tsv'
-test_mdwiki = '100med-mdwiki.tsv'
-
-enwp_list = read_file_list(test_enwp)
+enwp_list = read_file_list('data/enwp.tsv')
 mdwiki_list = read_file_list('data/mdwiki.tsv')
 
 cacher_headers = get_cacher_headers()
@@ -45,7 +37,6 @@ VERBOSE = False
 force_refresh = False
 
 def main():
-    global enwp_list
     set_logger()
 
 def test():
@@ -64,11 +55,15 @@ def load_mdwiki_cache_list(article_list, force_refresh=force_refresh):
     global failed_mdwiki_articles
     SESSION = CachedSession('2025_mdwiki_cache', backend='sqlite')
     for title in article_list:
-        page_urls = get_api_calls(CONST.mdwiki_domain, title)
-        for url in page_urls:
-            if not refresh_mdwiki_cache_url(url, force_refresh):
-                failed_mdwiki_articles[title] = 'FAILED'
-                break
+        refresh_mdwiki_title(title, force_refresh=force_refresh)
+
+def refresh_mdwiki_title(title, force_refresh=force_refresh):
+    global failed_mdwiki_articles
+    page_urls = get_api_calls(CONST.mdwiki_domain, title)
+    for url in page_urls:
+        if not refresh_mdwiki_cache_url(url, force_refresh):
+            failed_mdwiki_articles[title] = 'FAILED'
+            break
 
 def get_api_calls(host, title):
     title = page_encode(title)
@@ -81,27 +76,6 @@ def get_api_calls(host, title):
     api_calls.append(url)
     return api_calls
 
-def refresh_enwp_cache_url(url, force_refresh):
-    global failed_url_list
-    get_except = False
-    if not force_refresh and SESSION.cache.contains(url=url):
-        return
-    try:
-        # r = uncached_session.get(url, headers=CONST.cacher_headers)
-        r = requests.get(url, headers=CONST.cacher_headers)
-    except:
-        get_except = True
-
-    if get_except or r.status_code != 200:
-        logging.info('Failed to get URL: %s\n', str(url))
-        failed_url_list.append(url)
-    elif r.content.startswith(b'{"error":'):
-        logging.info('Error getting: %s\n', str(url))
-        logging.info(r.content + '\n')
-        failed_url_list.append(url)
-    else:
-        SESSION.cache.save_response(r)
-
 def refresh_mdwiki_cache_url(url, force_refresh):
     global failed_url_list
     get_except = False
@@ -110,10 +84,11 @@ def refresh_mdwiki_cache_url(url, force_refresh):
     try:
         # r = uncached_session.get(url, headers=CONST.cacher_headers)
         r = requests.get(url, headers=cacher_headers)
-    except:
-        get_except = True
-
-    if get_except or r.status_code == 503 or r.content.startswith(b'{"error":'):
+    except Exception as e:
+        print (e.message)
+        failed_url_list.append(url)
+        return False
+    if r.status_code == 503 or r.content.startswith(b'{"error":'):
         if r.content.startswith(b'{"error":'):
             print(r.content)
         r = retry_url(url)
@@ -153,39 +128,11 @@ def list_mdwiki_not_cached(article_list):
                 not_cached.append(url)
     return not_cached
 
-def get_enwp_url(url, force_refresh): # NOT USED
-    # check if url in cache
-    # if not get it to add to cache
-    # no retry
-
-    if force_refresh or not SESSION.cache.contains(url=url):
-        global failed_url_list
-        if VERBOSE:
-            logging.info('Getting URL: %s\n', str(url))
-        resp = SESSION.get(url)
-        if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
-            logging.error('Failed URL: %s\n', str(url))
-            failed_url_list.append(url)
-    return
-
 def get_last_revision(page): # NOT USED
     url = CONST.last_revision_query + page
     resp = requests.get(url=url)
     data = resp.json()
     return data['query']['pages'][0]['revisions'][0]['timestamp']
-
-def get_last_edit_date(page):  # NOT USED
-    # does not do redirects from redirect to real page
-    params = {
-        'action':"compare",
-        'format':"json",
-        'fromtitle':page,
-        'totitle':page,
-        'prop':'timestamp'
-    }
-    resp = requests.get(url=enwp_api, params=params)
-    data = resp.json()
-    return data['compare']['fromtimestamp']
 
 def breakout_resp(resp):
     headers = calc_resp_headers(resp)
@@ -209,7 +156,7 @@ def set_logger():
     stdout_handler.setLevel(logging.INFO)
     stdout_handler.setFormatter(formatter)
 
-    file_handler = logging.FileHandler('enwp-refresh-cache.log')
+    file_handler = logging.FileHandler('load-2025-cache.log')
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(formatter)
 
@@ -220,18 +167,6 @@ def write_list(data, file):
     with open(file, 'w') as f:
         for d in data:
             f.write(d + '\n')
-
-def get_enwp_page_list():
-    global enwp_list
-    #mdwiki_redirects = read_json_file('data/mdwiki_redirects.json')
-    try:
-        with open('data/enwp.tsv') as f:
-            txt = f.read()
-        enwp_list = txt.split('\n')[:-1]
-    except Exception as error:
-        print(error)
-        print('Failed to read enwp.tsv. Exiting.')
-        sys.exit(1)
 
 def parse_args(): # for future
     parser = argparse.ArgumentParser(description="Create or refresh cache for mdwiki-cacher.")
