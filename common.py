@@ -34,7 +34,7 @@ def get_zimfarm_stat(recipe):
 
 def page_encode(page):
     # encoded_page = page.replace('_', '%20').replace('/', '%2F').replace(':', '%3A').replace("'", '%27').replace("+", '%2B')
-    encoded_page = page.replace(' ', '_').replace('/', '%2F').replace(':', '%3A').replace("'", '%27').replace("+", '%2B')
+    encoded_page = page.replace(' ', '_').replace('/', '%2F').replace(':', '%3A').replace("'", '%27').replace("+", '%2B').replace("&", '%26')
     return encoded_page
 
 def page_decode(encoded_page):
