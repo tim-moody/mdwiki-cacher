@@ -93,7 +93,7 @@ def refresh_mdwiki_cache_url(url, force_refresh):
         if r.content.startswith(b'{"error":'):
             print(r.content)
             if '"code":"missingtitle"' in r.content:
-                logging.info('Failed to get URL: %s\n', str(url))
+                logging.info('Title missing in %s\n', str(url))
                 failed_url_list.append(url)
                 return False
         r = retry_url(url)
