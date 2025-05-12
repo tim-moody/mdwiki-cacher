@@ -92,6 +92,10 @@ def refresh_mdwiki_cache_url(url, force_refresh):
     if r.status_code == 503 or r.content.startswith(b'{"error":'):
         if r.content.startswith(b'{"error":'):
             print(r.content)
+            if '"code":"missingtitle"' in r.content:
+                logging.info('Failed to get URL: %s\n', str(url))
+                failed_url_list.append(url)
+                return False
         r = retry_url(url)
     if r:
         SESSION.cache.save_response(r)
