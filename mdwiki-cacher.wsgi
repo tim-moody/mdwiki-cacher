@@ -272,6 +272,10 @@ def get_single_redirect(path):
         return breakout_resp(resp)
 
 def get_mdwiki_redirect(title, path):
+    # mwoffliner issues two versions of the query,
+    # with and without %7Cpageimages before &rdlimit=max
+    # we only cache with
+    # try calling directly if without
     if VERBOSE:
         print('In get_mdwiki_redirect', path)
     # ADD RETRY
@@ -280,7 +284,9 @@ def get_mdwiki_redirect(title, path):
         resp = mdwiki_cache.get(url, headers=CONST.cacher_headers)
         return breakout_resp(resp)
     else:
-        return respond_redirects_no_page(title, path)
+        # return respond_redirects_no_page(title, path)
+        resp = requests.get(url, headers=CONST.cacher_headers)
+        return breakout_resp(resp)
 
 
 

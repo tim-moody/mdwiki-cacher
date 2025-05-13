@@ -38,6 +38,14 @@ force_refresh = False
 
 def main():
     set_logger()
+    args = parse_args()
+    # args.device is either value or None
+    if args.interactive: # allow override of path
+        sys.exit()
+
+    load_mdwiki_cache_list(mdwiki_list, force_refresh=force_refresh)
+    write_json_file(failed_mdwiki_articles, 'failed_mdwiki_articles.json')
+    write_list(failed_url_list, 'failed_mdwiki_urls.tsv')
 
 def test():
     load_mdwiki_cache()
@@ -166,11 +174,6 @@ def set_logger():
 
     logger.addHandler(file_handler)
     logger.addHandler(stdout_handler)
-
-def write_list(data, file):
-    with open(file, 'w') as f:
-        for d in data:
-            f.write(d + '\n')
 
 def parse_args(): # for future
     parser = argparse.ArgumentParser(description="Create or refresh cache for mdwiki-cacher.")
