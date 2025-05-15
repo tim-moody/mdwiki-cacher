@@ -255,7 +255,9 @@ def get_mdwiki_modules(path):
         resp = mdwiki_cache.get(url, headers=CONST.cacher_headers)
         return breakout_resp(resp)
     else:
-        return respond_modules_no_page(path)
+        # return respond_modules_no_page(path)
+        resp = requests.get(url, headers=CONST.cacher_headers)
+        return breakout_resp(resp)
 
 def get_single_redirect(path):
     if VERBOSE:
@@ -755,7 +757,7 @@ def respond_action_no_page(path):
     body = b'{"error":{"code":"missingtitle","info":"The page you specified does not exist."},"servedby":"mdwiki-cacher"}'
     return status_code, headers, body
 
-def respond_modules_no_page(path):
+def respond_modules_no_page(path): # not used as breaks mwoffliner
     print("Skipping Page: " + str(path))
     # REWRITE  send_response(404)
     # REWRITE  send_header('Content-type', 'text/html')
@@ -767,7 +769,7 @@ def respond_modules_no_page(path):
     body = b'{"error":{"code":"missingtitle","info":"The page you specified does not exist."},"servedby":"mdwiki-cacher"}'
     return status_code, headers, body
 
-def respond_redirects_no_page(page, path):
+def respond_redirects_no_page(page, path): # not used as breaks mwoffliner
     print("Skipping Page: " + str(path))
     # REWRITE  send_response(404)
     # REWRITE  send_header('Content-type', 'text/html')
