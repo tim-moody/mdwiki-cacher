@@ -103,8 +103,8 @@ def application(environ, start_response):
         if req_uri in mdwiki_urls: # some hardcoded urls that must go to mdwiki
             # status, response_headers, response_body = get_mdwiki_url_direct(req_uri)
             url = CONST.mdwiki_domain + req_uri
-            headers = get_request_headers()
-            resp = requests.get(url, headers=CONST.cacher_headers)
+            # headers = get_request_headers()
+            resp = requests.get(url, headers=CONST.cacher_headers) # non authorized
             status, response_headers, response_body = breakout_resp(resp)
 
         elif req_uri.startswith(nonwiki_url):
@@ -374,14 +374,14 @@ def get_mdwiki_url_direct(path):
 def get_enwp_url_direct(path): # not used as causes random failure
     # ADD RETRY
     url = CONST.enwp_domain + path
-    headers = get_request_headers()
+    headers = get_mwoffliner_request_headers()
     resp = requests.get(url, headers)
 
     if resp.status_code != 200 or resp.content.startswith(b'{"error":'):
         return respond_404('Not 200 or Error', path)
     return breakout_resp(resp)
 
-def get_request_headers():
+def get_mwoffliner_request_headers(): # non-auth headers
     headers = {}
     headers['User-Agent'] = 'MWOffliner/HEAD (info@iiab.me)'
     headers['Cookie'] = ''

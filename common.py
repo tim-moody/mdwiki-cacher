@@ -41,7 +41,7 @@ def page_decode(encoded_page):
     page = unquote(encoded_page)
     return page
 
-def get_cacher_headers():
+def get_auth_cacher_headers():
     tokens = read_yaml('data/token.yml')
     cacher_headers = CONST.cacher_headers
     cacher_headers.update({'Authorization': 'Bearer {}'.format(tokens['cacher_token'])})

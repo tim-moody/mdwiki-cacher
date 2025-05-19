@@ -14,7 +14,7 @@ enwp_api_cache = cache_dir + 'enwp_api'
 enwp_other_cache = cache_dir + 'enwp_other'
 
 user_agent = 'MDWikiCacher/' + VERSION + ' (https://mdwiki.wmcloud.org/nonwiki/status)'
-cacher_headers =  {'User-Agent': user_agent}
+cacher_headers =  {'User-Agent': user_agent} # not auth_cacher_headers
 
 # paste these
 # mdwiki_api_session = CachedSession(CONST.mdwiki_api_cache, backend='filesystem')
