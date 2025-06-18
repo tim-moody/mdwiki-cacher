@@ -115,7 +115,7 @@ def application(environ, start_response):
                 # status, response_headers, response_body = do_GET(req_uri)
                 status, response_headers, response_body = get_mdwiki_url_direct_authorized(req_uri)
                 print('direct_urls: ' + req_uri + ' Status: ' + status + '\n')
-                print(response_body[:50] + '\n'))
+                print(str(response_body[:50]) + '\n')
         start_response(status, response_headers)
         # convert string response back to bytes
         # return [response_body.encode()]
