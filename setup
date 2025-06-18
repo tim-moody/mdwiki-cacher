@@ -19,6 +19,7 @@ chown www-data:www-data /srv/mdwiki-cacher/data
 cd /srv/mdwiki-cacher
 
 cp /opt/mdwiki-cacher/common.py .
+cp /opt/mdwiki-cacher/constants.py .
 cp /opt/mdwiki-cacher/mdwiki-cacher.wsgi .
 cp /opt/mdwiki-cacher/load-mdwiki-cache.py .
 cp /opt/mdwiki-cacher/mk-combined-tsv.py .
