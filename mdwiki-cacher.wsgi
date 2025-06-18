@@ -102,7 +102,7 @@ def application(environ, start_response):
                 # resp = requests.get(url, headers=CONST.cacher_headers, allow_redirects=False) # non authorized
                 resp = requests.get(url, allow_redirects=True) # non authorized
                 status, response_headers, response_body = breakout_resp(resp)
-                print('mdwiki_urls: ' + url + ' Status: ' + status)
+                print('mdwiki_urls: ' + url + ' Status: ' + status + '\n')
                 if status == 400:
                     print(resp.content)
         elif req_uri.startswith(nonwiki_url):
@@ -114,7 +114,8 @@ def application(environ, start_response):
             else:
                 # status, response_headers, response_body = do_GET(req_uri)
                 status, response_headers, response_body = get_mdwiki_url_direct_authorized(req_uri)
-                print('direct_urls: ' + req_uri + ' Status: ' + status)
+                print('direct_urls: ' + req_uri + ' Status: ' + status + '\n')
+                print(response_body[:50] + '\n'))
         start_response(status, response_headers)
         # convert string response back to bytes
         # return [response_body.encode()]
@@ -135,7 +136,7 @@ def dump(environ):
 
 def get_mdwiki_url_direct_authorized(path):
     if VERBOSE:
-        print('In get_mdwiki_url_direct_authorized', path)
+        print('In get_mdwiki_url_direct_authorized', path + '\n')
     # ADD RETRY
     url = CONST.mdwiki_domain + path
     #logging.info("Downloading from URL: %s\n", str(url))
