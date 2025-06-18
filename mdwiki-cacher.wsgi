@@ -40,7 +40,7 @@ extract_api = '/w/api.php?action=query&format=json&titles='
 
 VERSION = CONST.VERSION
 VERBOSE = True
-TRAFFIC_ENABLED = False # Determines whether traffic sent to mdwik
+TRAFFIC_ENABLED = True # Determines whether traffic sent to mdwik
 skipped_page_count = 0
 
 # /robots.txt handled by nginx
