@@ -115,7 +115,7 @@ def application(environ, start_response):
                 # status, response_headers, response_body = do_GET(req_uri)
                 status, response_headers, response_body = get_mdwiki_url_direct_authorized(req_uri)
                 print('direct_urls: ' + req_uri + ' Status: ' + status + '\n')
-                print(str(response_body[:50]) + '\n')
+                print(str(response_body[:100]) + '\n')
         start_response(status, response_headers)
         # convert string response back to bytes
         # return [response_body.encode()]
@@ -135,13 +135,23 @@ def dump(environ):
     return response_body
 
 def get_mdwiki_url_direct_authorized(path):
+    get_except = False
     if VERBOSE:
         print('In get_mdwiki_url_direct_authorized', path + '\n')
     # ADD RETRY
     url = CONST.mdwiki_domain + path
     #logging.info("Downloading from URL: %s\n", str(url))
-    resp = requests.get(url, headers=auth_cacher_headers)
-    return breakout_resp(resp)
+    try:
+        resp = requests.get(url, headers=auth_cacher_headers)
+    except Exception as error:
+        get_except = True
+
+    if get_except or resp.status_code == 503 or resp.content.startswith(b'{"error":'):
+        resp = retry_url(url)
+    if resp:
+        return breakout_resp(resp)
+    else:
+        return respond_404('page not found', url)
 
 def get_mwoffliner_request_headers(): # non-auth headers
     headers = {}
@@ -149,6 +159,21 @@ def get_mwoffliner_request_headers(): # non-auth headers
     headers['Cookie'] = ''
     headers['Connection'] = 'close'
     return headers
+
+def retry_url(url):
+    print("Error or 503 in URL: %s\n", str(url))
+    sleep_secs = 20
+    for i in range(10):
+        get_except = False
+        try:
+            resp = requests.get(url, headers=auth_cacher_headers)
+        except:
+            get_except = True
+        if not get_except and resp.status_code != 503 and not resp.content.startswith(b'{"error":'):
+            return resp
+        print('Retrying URL: %s\n', str(url))
+        time.sleep(i * sleep_secs)
+    return None
 
 def respond_json(data_dict):
     outp = json.dumps(data_dict)
